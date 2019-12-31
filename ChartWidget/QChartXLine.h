@@ -20,6 +20,10 @@ public:
 protected:
     void mousePressEvent(QMouseEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
+
+signals:
+    void StartChartSignal();
+    void StopChartSignal();
 public slots:
     void updateText();
 public:

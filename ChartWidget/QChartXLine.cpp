@@ -37,11 +37,13 @@ void QChartXLine::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
         isUpdate = false;
+        emit StopChartSignal();
     }
     // 如果是鼠标右键按下
     else if(event->button() == Qt::RightButton)
     {
         isUpdate = true;
+        emit StartChartSignal();
     }
 }
 

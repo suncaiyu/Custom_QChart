@@ -8,22 +8,59 @@ ChartWidget::ChartWidget(QWidget *parent)
       , ui(new Ui::ChartWidget)
 {
     ui->setupUi(this);
-    for (int i = 0; i <= timeSplite; i++) {
-        dataVector.push_back(qrand() % 100);
-    }
 
-    //    timer = new QTimer(this);
-    //    connect(timer, &QTimer::timeout, this, &ChartWidget::updateData);
-    //    timer->start(1000);
-    randomColor = QColor(qrand()%255,qrand()%255,qrand()%255);
-    penRandomColor = QColor(qrand()%200,qrand()%220,qrand()%240);
+    chart1 = new Chart();
+    chart2 = new Chart();
+    chart3 = new Chart();
+    chart1->spliteNumber = 50;
+    chart2->spliteNumber = 50;
+    chart3->spliteNumber = 50;
+
+    chart1->timespace = 10;
+    chart2->timespace = 10;
+    chart3->timespace = 10;
+
+    chart1->myIndex = 0;
+    chart2->myIndex = 1;
+    chart3->myIndex = 2;
+
+    chart1->CreateInitNumber();
+    chart2->CreateInitNumber();
+    chart3->CreateInitNumber();
+
+    chart1->chartHeight = 150;
+    chart2->chartHeight = 150;
+    chart3->chartHeight = 150;
+
+
+    chart1->SetChartTopAndBtn();
+    chart2->SetChartTopAndBtn();
+    chart3->SetChartTopAndBtn();
+
+    chart1->chartYNumber = 100;
+    chart2->chartYNumber = 100;
+    chart3->chartYNumber = 100;
+    chart1->stepYnumber = 1.3;
+    chart2->stepYnumber = 1.3;
+    chart3->stepYnumber = 1.3;
+    chart1->backgroundColor = QColor(0, 0, 0, 155);
+    chart2->backgroundColor = QColor(0, 0, 0,155);
+    chart3->backgroundColor = QColor(05, 0, 0,155);
+
+    chart1->lineColor = QColor(qrand() % 255, qrand() % 255, qrand() % 255);
+    chart2->lineColor = QColor(qrand() % 255, qrand() % 255, qrand() % 255);
+    chart3->lineColor = QColor(qrand() % 255, qrand() % 255, qrand() % 255);
 }
 
 void ChartWidget::updateData()
 {
     startIndex++;
-    dataVector.push_back(qrand() % 100);
+    chart1->dataVector.push_back(qrand() % 100);
+    chart2->dataVector.push_back(qrand() % 100);
+    chart3->dataVector.push_back(qrand() % 100);
+    if(isUpdate){
     update();
+    }
 }
 
 ChartWidget::~ChartWidget()
@@ -31,39 +68,54 @@ ChartWidget::~ChartWidget()
     delete ui;
 }
 
+void ChartWidget::StopUpdateSlot()
+{
+    isUpdate = false;
+}
+
+void ChartWidget::StartUpdateSlot()
+{
+    isUpdate = true;
+}
+
+
+void ChartWidget::PaintChart(QPainter *p, Chart *c)
+{
+    p->fillRect(QRect(0,(c->myIndex)*c->chartHeight,width(),c->chartHeight), QBrush(c->backgroundColor));
+    QPen pen; //创建一个画笔
+    pen.setColor(c->lineColor);
+    pen.setWidth(1);
+    p->setPen(pen);
+    float secondData;
+    for (int i = startIndex; i < c->dataVector.size(); i++) {
+        if (i == startIndex) {
+            c->tempData = QPointF(c->timespace , c->dataVector[i] * (c->stepYnumber) + heightSpacing + c->chartTop);
+        } else {
+            secondData = c->dataVector[i];
+            QPointF one = c->tempData;
+
+            QPointF two = QPointF(c->timespace + c->stepXNumber * (i - startIndex), heightSpacing + secondData * (c->stepYnumber) + c->chartTop);
+
+            p->drawLine(one, two);
+            c->tempData = two;
+        }
+    }
+}
 void ChartWidget::paintEvent(QPaintEvent *e)
 {
     QPainter painter(this);
-    painter.fillRect(rect(), QBrush(randomColor));
     painter.setRenderHint(QPainter::Antialiasing, 1);
-    float totalheight = height();
-    stepH = (totalheight - 2 * heightSpacing) / spliteH;
 
-    //高度就是 heightSpacing + x * stepH
-    //假设剑阁为10；
-    QPen pen; //创建一个画笔
-    pen.setColor(penRandomColor);
-    pen.setWidth(1);
-    painter.setPen(pen);
-    float secondData;
-    for (int i = startIndex; i < dataVector.size(); i++) {
-        if (i == startIndex) {
-            tempData = QPointF(timeSpace , dataVector[i] * stepH + heightSpacing);
-        } else {
-            secondData = dataVector[i];
-            QPointF one = tempData;
-
-            QPointF two = QPointF(timeSpace + timelinestepwidth * (i - startIndex), heightSpacing + secondData * stepH);
-
-            painter.drawLine(one, two);
-            tempData = two;
-        }
-    }
+    PaintChart(&painter, chart1);
+    PaintChart(&painter, chart2);
+    PaintChart(&painter, chart3);
 }
 
 void ChartWidget::resizeEvent(QResizeEvent *event)
 {
-    float panelwidth = width() - 2 * timeSpace;
-    timelinestepwidth = (float) panelwidth / timeSplite;
+    float panelwidth = width() - 2 * chart1->timespace;
+    chart1->stepXNumber = (float) panelwidth / chart1->spliteNumber;
+    chart2->stepXNumber = (float) panelwidth / chart2->spliteNumber;
+    chart3->stepXNumber = (float) panelwidth / chart3->spliteNumber;
 }
 
