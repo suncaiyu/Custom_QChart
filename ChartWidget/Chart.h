@@ -32,9 +32,16 @@ public:
     int myIndex; //chart的别名，表示第几个在界面上
     void SetChartTopAndBtn();
 
+    QRect myRect; // 当前的位置
+    QRect fixRect; // 理论上的位置
 
+    bool isSelect = false; //是否被点击选中
+    int lastPosY;  //上一次的Y的位置，用来帮助鼠标move移动的
+    QPoint centerPos; //chart的中部位置，方便chart拖动交换判断
+    void SetCenterPos();
 
-    QPointF tempData;
+    QPointF tempData; //上一个点的位置，记录绘图数据点的
+
 private:
     Ui::Chart *ui;
 

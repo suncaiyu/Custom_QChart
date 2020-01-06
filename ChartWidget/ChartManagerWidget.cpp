@@ -41,4 +41,3 @@ void ChartManagerWidget::resizeEvent(QResizeEvent *event)
     mychart->timeSplite = timeLine->spliteSize;
     mychart->timelinestepwidth = timeLine->stepwidth;
 }
-

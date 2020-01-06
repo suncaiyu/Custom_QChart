@@ -22,6 +22,13 @@ void Chart::CreateInitNumber()
 
 void Chart::SetChartTopAndBtn()
 {
-    chartTop = chartHeight * myIndex;
-    chartBottom = chartHeight * (myIndex+1);
+    //    chartTop = chartHeight * myIndex;
+    chartTop = myRect.y();
+    chartBottom = myRect.y() + myRect.height();
+    //    chartBottom = chartHeight * (myIndex+1);
+}
+
+void Chart::SetCenterPos()
+{
+    centerPos = QPoint(myRect.width() /2,myRect.height() /2 + myRect.y());
 }

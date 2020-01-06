@@ -24,6 +24,9 @@ public:
 protected:
     void paintEvent(QPaintEvent *e);
     void resizeEvent(QResizeEvent *e);
+    void mousePressEvent(QMouseEvent *e);
+    void mouseMoveEvent(QMouseEvent *e);
+    void mouseReleaseEvent(QMouseEvent *e);
 
 public slots:
     void StartUpdateSlot();
@@ -47,6 +50,8 @@ public:
     Chart *chart1;
     Chart *chart2;
     Chart *chart3;
+
+    QList<Chart *> iList;
 
     bool isUpdate = true;
 };
