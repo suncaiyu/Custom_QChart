@@ -1,7 +1,7 @@
 ﻿#ifndef CHARTMANAGERWIDGET_H
 #define CHARTMANAGERWIDGET_H
 #include "ChartWidget.h"
-#include "QChartXLine.h"
+#include "TimeLine.h"
 #include <QWidget>
 
 namespace Ui {
@@ -18,11 +18,13 @@ public:
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
+    bool eventFilter(QObject *obj, QEvent *e);
 
 
 private:
     Ui::ChartManagerWidget *ui;
-    QChartXLine *timeLine;
+    //    QChartXLine *timeLine;
+    TimeLine *onlyTimeLine;
     ChartWidget *mychart;
     QTimer *timer;
 };

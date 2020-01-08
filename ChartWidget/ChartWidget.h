@@ -5,10 +5,13 @@
 #include <QPainter>
 #include "Chart.h"
 #include <QTimer>
+#include "TimeLine.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class ChartWidget; }
 QT_END_NAMESPACE
+
+static bool comQt(Chart &a, Chart &b);
 
 // chart的绘制页面
 class ChartWidget : public QMainWindow
@@ -16,7 +19,7 @@ class ChartWidget : public QMainWindow
     Q_OBJECT
 
 public:
-    ChartWidget(QWidget *parent = nullptr);
+    ChartWidget(TimeLine *timeline, QWidget *parent = nullptr);
     ~ChartWidget();
 
     void updateData();
@@ -27,10 +30,12 @@ protected:
     void mousePressEvent(QMouseEvent *e);
     void mouseMoveEvent(QMouseEvent *e);
     void mouseReleaseEvent(QMouseEvent *e);
+    void mouseDoubleClickEvent(QMouseEvent *event);
 
 public slots:
     void StartUpdateSlot();
     void StopUpdateSlot();
+    void GuiUpdate();
 
 public:
     Ui::ChartWidget *ui;
@@ -54,5 +59,13 @@ public:
     QList<Chart *> iList;
 
     bool isUpdate = true;
+    TimeLine *onlyTimeLine;
+
+    qreal GetDate(Chart *c); //返回time的时间点
+
+    void ResetiListRect();
+    int dragindex = -1;
+    Chart *dragChart;
+    bool ChartWidget::comQt(const Chart a, const Chart b);
 };
 #endif // CHARTWIDGET_H

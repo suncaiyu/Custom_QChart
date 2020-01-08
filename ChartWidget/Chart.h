@@ -2,6 +2,7 @@
 #define CHART_H
 
 #include <QWidget>
+#include <QPropertyAnimation>
 
 namespace Ui {
 class Chart;
@@ -11,21 +12,22 @@ class Chart;
 class Chart : public QWidget
 {
     Q_OBJECT
+    Q_PROPERTY(QRect rc READ GetRect WRITE SetRect)
 
 public:
     explicit Chart(QWidget *parent = nullptr);
     ~Chart();
     void CreateInitNumber();
     float chartHeight; //必须的。chart的高度
-    int spliteNumber; // 必须的 表示timeline的对应刻度数亮
-    float timespace; //timeline的编剧
+    float timespace = 0; //timeline的编剧
 
     QColor backgroundColor; // 必须的，chart的背景色
     QColor lineColor; // 必须的chart的线色
-    float chartYNumber; // 必须的 chart的刻度数
+    float chartscaleNumber = 100; // 必须的 chart的刻度数
     float stepYnumber; //可计算的 每个可读的增加值
     QVector<float> dataVector; // data的存放数据
-    float stepXNumber; //表示timrline的step的增加值
+    QVector<int> timeVector; //time的存放数据
+
     float chartTop; // chart的顶部
     float chartBottom; // chart的地步
 
@@ -41,10 +43,19 @@ public:
     void SetCenterPos();
 
     QPointF tempData; //上一个点的位置，记录绘图数据点的
+    void InitAnimation();
+    void StartAnimation(int duration, QEasingCurve type = QEasingCurve::Linear);
+
+    bool chartPause;
+    int tempFlag;
+
+    void CalculateStepY();
 
 private:
     Ui::Chart *ui;
-
+    QRect GetRect();
+    void SetRect(QRect rc);
+    QPropertyAnimation *animation;
 };
 
 #endif // CHART_H

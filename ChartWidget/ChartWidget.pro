@@ -18,26 +18,21 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     Chart.cpp \
     ChartManagerWidget.cpp \
-    QChartXLine.cpp \
-    TestCustomPlot.cpp \
+    TimeLine.cpp \
     main.cpp \
-    ChartWidget.cpp \
-    qcustomplot.cpp
+    ChartWidget.cpp
 
 HEADERS += \
     Chart.h \
     ChartManagerWidget.h \
     ChartWidget.h \
-    QChartXLine.h \
-    TestCustomPlot.h \
-    qcustomplot.h
+    TimeLine.h
 
 FORMS += \
     Chart.ui \
     ChartManagerWidget.ui \
     ChartWidget.ui \
-    QChartXLine.ui \
-    TestCustomPlot.ui
+    TimeLine.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
