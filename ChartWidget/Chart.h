@@ -20,6 +20,7 @@ public:
     void CreateInitNumber();
     float chartHeight; //必须的。chart的高度
     float timespace = 0; //timeline的编剧
+    float chartTopandBottomSpace = 10;
 
     QColor backgroundColor; // 必须的，chart的背景色
     QColor lineColor; // 必须的chart的线色

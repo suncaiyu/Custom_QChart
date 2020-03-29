@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E1BD4056-2EAB-3AEE-955F-E1B7176C3AB5}</ProjectGuid>
     <RootNamespace>ChartWidget</RootNamespace>
-    <Keyword>QtVS_v301</Keyword>
+    <Keyword>QtVS_v302</Keyword>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformMinVersion>10.0.17763.0</WindowsTargetPlatformMinVersion>
   </PropertyGroup>

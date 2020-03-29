@@ -23,6 +23,13 @@ public:
     ~ChartWidget();
 
     void updateData();
+    int PlusOrMinus = 0;
+
+    bool changeHeightFlag = false;
+
+    void ReSizeChart();
+    void ChangeHeight(QWheelEvent *);
+    void wheelEvent(QWheelEvent *);
 
 protected:
     void paintEvent(QPaintEvent *e);
@@ -30,7 +37,6 @@ protected:
     void mousePressEvent(QMouseEvent *e);
     void mouseMoveEvent(QMouseEvent *e);
     void mouseReleaseEvent(QMouseEvent *e);
-    void mouseDoubleClickEvent(QMouseEvent *event);
 
 public slots:
     void StartUpdateSlot();
@@ -63,9 +69,8 @@ public:
 
     qreal GetDate(Chart *c); //返回time的时间点
 
-    void ResetiListRect();
+    void ResetiListRect(Chart *handle, Chart *wait);
     int dragindex = -1;
     Chart *dragChart;
-    bool ChartWidget::comQt(const Chart a, const Chart b);
 };
 #endif // CHARTWIDGET_H

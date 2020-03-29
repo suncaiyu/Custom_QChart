@@ -22,8 +22,8 @@ void Chart::CreateInitNumber()
 
 void Chart::SetChartTopAndBtn()
 {
-    chartTop = myRect.y();
-    chartBottom = myRect.y() + myRect.height();
+    chartTop = myRect.y() + chartTopandBottomSpace;
+    chartBottom = myRect.y() + chartHeight - chartTopandBottomSpace;
 }
 
 void Chart::SetCenterPos()
@@ -63,7 +63,7 @@ void Chart::StartAnimation(int duration, QEasingCurve type)
 
 void Chart::CalculateStepY()
 {
-    stepYnumber = (float) chartHeight / (float) chartscaleNumber;
+    stepYnumber = ((float) chartHeight - (2 * chartTopandBottomSpace)) / ((float) chartscaleNumber);
     fixRect.setHeight(chartHeight);
     myRect.setHeight(chartHeight);
 }

@@ -4,6 +4,9 @@
 #include <QPainter>
 #include <QStyleOption>
 #include <QVBoxLayout>
+#include <QWheelEvent>
+#include <qscrollbar.h>
+#include <QMouseEvent>
 
 // 最终chart的展示页面
 ChartManagerWidget::ChartManagerWidget(QWidget *parent)
@@ -27,8 +30,10 @@ ChartManagerWidget::ChartManagerWidget(QWidget *parent)
     connect(timer, &QTimer::timeout, mychart, &ChartWidget::updateData);
 
     ui->widget->setMinimumHeight(150 * 3);
-        ui->scrollArea->viewport()->installEventFilter(this);
+    ui->scrollArea->viewport()->installEventFilter(this);
 //    ui->widget->installEventFilter(this);
+    
+    QScrollBar *s= ui->scrollArea->horizontalScrollBar();
 }
 
 ChartManagerWidget::~ChartManagerWidget()
@@ -44,19 +49,30 @@ void ChartManagerWidget::resizeEvent(QResizeEvent *event)
 
 bool ChartManagerWidget::eventFilter(QObject *obj, QEvent *e)
 {
-    //    if  (e- > type （）) ==  QEvent :: Wheel ）
-    //        {
-    //                //忽略事件（这实际上
-    //            //使它“跳过”了一个对象）
-    //            evt- > ignore （）;
-    //            }
-    //            //返回false以继续事件传播
-    //    //对于所有事件，
-    //    返回 false ;
-//    qDebug() << obj->objectName() << "////" << e->type();
     if (e->type() == QEvent::Wheel) {
-        e->ignore();
-        return false;
+        QWheelEvent *we = dynamic_cast<QWheelEvent *>(e);
+        if (we->modifiers()&Qt::ControlModifier/* && we->delta() > 0*/) {
+            // +++
+            qDebug() << "1111";
+            mychart->ChangeHeight(we);
+            return true;
+        }
+        if (we->delta() > 0) {
+            int value = ui->scrollArea->verticalScrollBar()->value();
+            ui->scrollArea->verticalScrollBar()->setValue(value - 5);
+            return true;
+        }
+        else {
+            int value = ui->scrollArea->verticalScrollBar()->value();
+            ui->scrollArea->verticalScrollBar()->setValue(value + 5);
+            return true;
+        }
+        return true;
     }
     return false;
+}
+
+void ChartManagerWidget::wheelEvent(QWheelEvent *e)
+{
+
 }

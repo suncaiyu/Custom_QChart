@@ -62,6 +62,12 @@ ChartWidget::ChartWidget(TimeLine *timeline,QWidget *parent)
     iList << chart1 << chart2 << chart3;
 }
 
+int compare(Chart *infoA, const Chart *infoB)
+{
+    return infoA->fixRect.y() < infoB->fixRect.y();
+}
+
+
 void ChartWidget::updateData()
 {
     //    startIndex++;
@@ -169,26 +175,28 @@ void ChartWidget::resizeEvent(QResizeEvent *event)
     }
 }
 
-void ChartWidget::mouseDoubleClickEvent(QMouseEvent *event)
+bool comp(double x, double y) {
+    return x > y;
+}
+
+void ChartWidget::ReSizeChart()
 {
-    //for (int i = 0; i < iList.size(); i++) {
-    //    if (iList[i]->myRect.contains(event->pos())) {
-    //        if (event->button() == Qt::LeftButton) {
-    //            iList[i]->chartHeight = iList[i]->chartHeight + 2;
-    //            iList[i]->CalculateStepY();
-    //            ResetiListRect();
-    //        }
-    //        if (event->button() == Qt::RightButton) {
-    //            iList[i]->chartHeight = iList[i]->chartHeight - 2;
-    //            iList[i]->CalculateStepY();
-    //            ResetiListRect();
-    //        }
-    //    }
-    //}
+    qSort(iList.begin(), iList.end(), compare);
+    int tempY = 0;
+    for (int i = 0; i < iList.size(); i++) {
+        int tempHeight = iList[i]->chartHeight;
+        iList[i]->fixRect.setY(tempY);
+        iList[i]->myRect.setY(tempY);
+        iList[i]->fixRect.setHeight(tempHeight);
+        iList[i]->myRect.setHeight(tempHeight);
+        tempY += tempHeight;
+        iList[i]->SetChartTopAndBtn();
+    }
 }
 
 void ChartWidget::mousePressEvent(QMouseEvent *e)
 {
+    // 第一个不一定是0;
     for (int i = 0; i < iList.size(); i++) {
         if (iList[i]->myRect.contains(e->pos())) {
             iList[i]->InitAnimation();
@@ -202,7 +210,35 @@ void ChartWidget::mousePressEvent(QMouseEvent *e)
     if (dragindex != -1) {
         iList.removeAt(dragindex);
         iList << dragChart;
+        //iList.insert(dragindex, dragChart);
     }
+}
+
+void ChartWidget::wheelEvent(QWheelEvent *e)
+{
+    if (changeHeightFlag) {
+        for (int i = 0; i < iList.size(); i++) {
+            if (iList[i]->fixRect.contains(e->pos())) {
+                if (e->delta() > 0) {
+                    iList[i]->chartHeight = iList[i]->chartHeight + 2;
+                    iList[i]->CalculateStepY();
+                    ReSizeChart();
+                }
+                if (e->delta() < 0) {
+                    iList[i]->chartHeight = iList[i]->chartHeight - 2;
+                    iList[i]->CalculateStepY();
+                    ReSizeChart();
+                }
+            }
+        }
+    }
+    changeHeightFlag = false;
+}
+
+void ChartWidget::ChangeHeight(QWheelEvent *e)
+{
+    changeHeightFlag = true;
+    wheelEvent(e);
 }
 
 void ChartWidget::mouseMoveEvent(QMouseEvent *e)
@@ -220,17 +256,8 @@ void ChartWidget::mouseMoveEvent(QMouseEvent *e)
                     continue;
                 } else {
                     if (iList[j]->fixRect.contains(iList[i]->centerPos)) {
-                        int indexi = iList[i]->myIndex;
-                        int indexj = iList[j]->myIndex;
-                        iList[i]->myIndex = indexj;
-                        iList[j]->myIndex = indexi;
-                        QRect tempi = iList[i]->fixRect;
-                        QRect tempj = iList[j]->fixRect;
-                        iList[j]->fixRect = tempi;
-                        iList[j]->StartAnimation(300,QEasingCurve::InCubic);
-                        iList[i]->fixRect = tempj;
-                        iList[i]->SetChartTopAndBtn();
-                        iList[j]->SetChartTopAndBtn();
+                        // i 我手上的    j 带操作的
+                        ResetiListRect(iList[j], iList[i]);
                     }
                 }
             }
@@ -239,16 +266,6 @@ void ChartWidget::mouseMoveEvent(QMouseEvent *e)
     }
 }
 
-bool ChartWidget::comQt(const Chart a, const Chart b)
-{
-    if (a.fixRect.y() > b.fixRect.y()) {
-        return false;
-    }
-    else {
-        return true;
-    }
-}
-#include <QtAlgorithms>
 void ChartWidget::mouseReleaseEvent(QMouseEvent *e)
 {
     for (int i = 0; i < iList.size(); i++) {
@@ -263,8 +280,6 @@ void ChartWidget::mouseReleaseEvent(QMouseEvent *e)
         iList[i]->SetChartTopAndBtn();
     }
 }
-
-
 
 void ChartWidget::GuiUpdate()
 {
@@ -293,18 +308,39 @@ qreal ChartWidget::GetDate(Chart *c)
     return -2;
 }
 
-void ChartWidget::ResetiListRect()
+void ChartWidget::ResetiListRect(Chart *handle, Chart *wait)
 {
-    //int tempHeight = 0;
-    //for (int i = 0; i < iList.size(); i++) {
-    //    int thisH = iList[i]->fixRect.height();
-    //    iList[i]->fixRect.setY(tempHeight);
-    //    iList[i]->myRect.setY(tempHeight);
-    //    iList[i]->fixRect.setHeight(iList[i]->chartHeight);
-    //    iList[i]->myRect.setHeight(iList[i]->chartHeight);
-    //    iList[i]->SetChartTopAndBtn();
-    //    tempHeight = thisH + tempHeight;
-    //}
+    //参数写反了。。。  handle是待处理的，wait是手上拎着的
+    QRect waitRect = wait->fixRect;
+    int waitTopY = waitRect.y(); //手上的理论位置的x
+    QRect handleRect = handle->fixRect;
+    int handleTopY = handleRect.y(); // 待处理的理论位置的x
+
+    if (waitTopY > handleTopY) {
+        // 当这种情况 是向下拖,所以先计算待处理的位置
+        int waitTempX = handleTopY;
+        int waitHeight = waitRect.height();
+        int handleHeight = handleRect.height();
+        int handleX = waitTempX + waitHeight;
+        wait->fixRect.setY(waitTempX);
+        wait->fixRect.setHeight(waitHeight);
+        handle->fixRect.setY(handleX);
+        handle->fixRect.setHeight(handleHeight);
+    }
+    if (waitTopY < handleTopY) {
+        // 向上拖
+        int handleY = waitTopY;
+        int handleTempHeight = handleRect.height();
+        int waitHeight = waitRect.height();
+        int waitTempY = waitTopY + handleTempHeight;
+        handle->fixRect.setY(handleY);
+        handle->fixRect.setHeight(handleTempHeight);
+        wait->fixRect.setY(waitTempY);
+        wait->fixRect.setHeight(waitHeight);
+    }
+    wait->SetChartTopAndBtn();
+    handle->SetChartTopAndBtn();
+    handle->StartAnimation(300, QEasingCurve::InCubic);
 }
 
 //TODO：chart高度的增减
