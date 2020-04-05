@@ -32,9 +32,9 @@ ChartWidget::ChartWidget(TimeLine *timeline,QWidget *parent)
     chart1->stepYnumber = 1.3;
     chart2->stepYnumber = 1.3;
     chart3->stepYnumber = 1.3;
-    chart1->backgroundColor = QColor(0, 0, 0, 155);
-    chart2->backgroundColor = QColor(0, 0, 0,155);
-    chart3->backgroundColor = QColor(05, 0, 0,155);
+    chart1->backgroundColor = QColor(255 , 255, 255, 155);
+    chart2->backgroundColor = QColor(255, 255, 255, 155);
+    chart3->backgroundColor = QColor(255, 255, 255, 155);
 
     chart1->lineColor = QColor(qrand() % 255, qrand() % 255, qrand() % 255);
     chart2->lineColor = QColor(qrand() % 255, qrand() % 255, qrand() % 255);
@@ -79,7 +79,7 @@ void ChartWidget::updateData()
     chart2->dataVector.push_back(qrand() % 100);
     chart3->dataVector.push_back(qrand() % 100);
     for (int i = 0; i < iList.size(); i++) {
-        qDebug() << i << "```````" << iList[i]->fixRect.y();
+        qDebug() << i << "```````" << iList[i]->fixRect.height();
     }
 }
 
@@ -133,6 +133,15 @@ void ChartWidget::PaintChart(QPainter *p, Chart *c)
                                       heightSpacing + secondData * (c->stepYnumber) + c->chartTop);
                 p->drawLine(one, two);
                 c->tempData = two;
+                QPainterPath path;
+                path.clear();
+                path.moveTo(one.x(), one.y());
+                path.lineTo(two.x(), two.y());
+                path.lineTo(two.x(), c->myRect.height() + c->myRect.y());
+                path.lineTo(one.x(), c->myRect.height() + c->myRect.y());
+                QColor pathcolor = c->lineColor;
+                pathcolor.setAlpha(155);
+                p->fillPath(path, QBrush(pathcolor));
             }
         }
     } else {
@@ -149,6 +158,15 @@ void ChartWidget::PaintChart(QPainter *p, Chart *c)
                                       heightSpacing + secondData * (c->stepYnumber) + c->chartTop);
                 p->drawLine(one, two);
                 c->tempData = two;
+                QPainterPath path;
+                path.clear();
+                path.moveTo(one.x(), one.y());
+                path.lineTo(two.x(), two.y());
+                path.lineTo(two.x(), c->myRect.height() + c->myRect.y());
+                path.lineTo(one.x(), c->myRect.height() + c->myRect.y());
+                QColor pathcolor = c->lineColor;
+                pathcolor.setAlpha(155);
+                p->fillPath(path, QBrush(pathcolor));
             }
         }
     }

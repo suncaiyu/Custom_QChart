@@ -26,8 +26,8 @@ TimeLine::TimeLine(QWidget *parent) :
     SetDistanceOfTag(scale);
     tagNumber = -1;
 
-    colBg = QColor(0,0,0,155);
-    colTimeline = QColor(255,255,255);
+    colBg = QColor(255,255,255,155);
+    colTimeline = QColor(0,0,0);
     colText = QColor(255,12,12,155);
 
     isPause = false;
