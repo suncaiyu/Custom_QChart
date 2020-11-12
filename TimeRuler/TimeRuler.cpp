@@ -78,6 +78,7 @@ void TimeRuler::paintEvent(QPaintEvent *event)
     p.setPen(pen);
     double baseYLocation = bottom - 20;
     p.drawLine(0, baseYLocation, right, baseYLocation);
+    p.drawLine(0, baseYLocation + 2, right, baseYLocation + 2);
     int textHeight = TEXT_HEIGHT;
     QFont font("Calibri", textHeight, QFont::Normal, false);
     p.setFont(font);
@@ -142,7 +143,7 @@ void TimeRuler::paintEvent(QPaintEvent *event)
             if (drawTime < 0) {
                 pen.setColor(QColor(150, 0, 0));
             } else {
-                pen.setColor(QColor(200, 200, 200));
+                pen.setColor(QColor(0, 0, 0));
             }
             p.setPen(pen);
             p.drawLine(onScreenX, baseYLocation - 1, onScreenX, baseYLocation + 5);
