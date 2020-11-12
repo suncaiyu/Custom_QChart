@@ -28,6 +28,7 @@ private:
     Ui::KChart *ui;
     QVector<ChartData *> charts;
     void CalculatorChart();
+    QVector<ChartData *> SortCharts(QVector<ChartData *> &charts);
     double startPressY = -100;
     double disappearArea = 0; // 不可见chart区域 负值
     double allChartHeight = 0; // chart的总高度
