@@ -32,7 +32,7 @@ void TimeRuler::wheelEvent(QWheelEvent *event)
     if (pWindowContext->viewWindowA < 1.0e-10) {
         pWindowContext->viewWindowA = 1.0e-10;
     }
-    pWindowContext->viewWindowB = (mouseOnTimePoint * pWindowContext->viewWindowA - mousePos) * -1;
+    pWindowContext->viewWindowB = (mouseOnTimePoint * pWindowContext->viewWindowA - mousePos) * -1.;
     update();
 }
 
@@ -89,10 +89,13 @@ void TimeRuler::paintEvent(QPaintEvent *event)
     long long ticksInWindow = rightTime - leftTime + 1;
     // 计算最小标度在时间点的步长
     long long pre = (double) ((ticksInWindow) / (double) (right - left) * 4.);
+    qDebug() << "pre" << pre;
+    // minstep代表最小的刻度是多少ns  每个minstep的距离是minstep * viewWindowA
     long long minStep = 1;
     while (pre > minStep) {
         minStep *= 10;
     }
+    //qDebug() << "minStep" << minStep;
     p.setPen(Qt::black);
     // 计算刻度宽度对象
     fm = p.fontMetrics();
@@ -197,6 +200,23 @@ void TimeRuler::paintEvent(QPaintEvent *event)
         pWindowContext->darkBeforeZero = -100;
     }
     PaintMouseMeasureLine(&p);
+
+    //测试
+    // 注意对时间进行一下剪裁，如果超出屏幕范围的，就不要了，否则放太大会发生符号位溢出现象
+    long long fromTime = 10000000000;
+    if (fromTime < leftTime) {
+        fromTime = leftTime;
+    }
+    long long toTime = 12222222546;
+    if (toTime > rightTime) {
+        toTime = rightTime;
+    }
+    long long x = fromTime * pWindowContext->viewWindowA + pWindowContext->viewWindowB;
+    qDebug() << "x" << x;
+    long long y = (toTime) *pWindowContext->viewWindowA + pWindowContext->viewWindowB;
+    qDebug() << "y" << y - x;
+    QRectF r(x, 10, y - x, 10);
+    p.fillRect(r, Qt::red);
 }
 
 void TimeRuler::mouseMoveEvent(QMouseEvent *event)
@@ -254,6 +274,8 @@ void TimeRuler::PaintMouseMeasureLine(QPainter *p)
         long long mouseOnTime = (long long) (((double) (pWindowContext->mouseLocationX)
                                               - pWindowContext->viewWindowB)
                                              / pWindowContext->viewWindowA);
+
+
         long long line1X = mouseOnTime * pWindowContext->viewWindowA + pWindowContext->viewWindowB;
         long long line2X = (mouseOnTime + 1) * pWindowContext->viewWindowA
                            + pWindowContext->viewWindowB;

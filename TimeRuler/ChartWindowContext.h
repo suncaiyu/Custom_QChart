@@ -6,7 +6,7 @@ class ChartWindowContext
 public:
     ChartWindowContext(){};
     virtual ~ChartWindowContext(){};
-    // 映射参数，屏幕坐标 = 绝对时间戳 * viewWindowA + viewWindowB
+    // 映射参数: 屏幕坐标 = 绝对时间戳 * viewWindowA + viewWindowB
     double viewWindowA = 6e-09; // 缩放系数
     double viewWindowB = 0; // 屏幕之外的有多少
     //    QWidget *pWidget;
