@@ -28,10 +28,15 @@ private:
     Ui::KChart *ui;
     QVector<ChartData *> charts;
     void CalculatorChart();
-    QVector<ChartData *> SortCharts(QVector<ChartData *> &charts);
+    QVector<ChartData *> SortCharts();
+    void CalculatorTitleVaule();
     double startPressY = -100;
     double disappearArea = 0; // 不可见chart区域 负值
     double allChartHeight = 0; // chart的总高度
+    double chartLabelAreaWidth = 120;
+    QColor chartLabelAreaColor;
+    QColor chartAreaColor;
+    double iconSpacing = 15; // 每一级的间距
 };
 
 #endif // KCHART_H

@@ -18,12 +18,14 @@ public:
     double dragTop;
     bool isSwaping = false;
     double swapingTop;
+    QString label = "Just Label";
 
 
     /*          一下是title相关              */
     bool isTitle = false; // 如果是标签，设为true
     QString title;   // 需要写一下标签名
-    double allChildrenHeight;
+    double allChildrenHeight = -100; // chart的总高度，如果是title，子节点是chart，这个是chart的总高度  (下面一层子chart的高度)
+    double allHeight;  // chart + title的总高度(底下所有子节点的高度)
     double childMinTop;
     ChartData *parent;
     QVector<ChartData *> children;

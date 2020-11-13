@@ -37,18 +37,42 @@ KChart::KChart(QWidget *parent) :
     charts.push_back(cddd);
     ChartData *cdddd = new ChartData(cddd);
     cdddd->isTitle = true;
-    cdddd->title = "title11";
+    cdddd->title = "title2";
     cdddd->color = QColor(rand() % 255, rand() % 255, rand() % 255);
     cdddd->height = 20;
     charts.push_back(cdddd);
-    for (int i = 0; i < 8; i++) {
+    ChartData *cddddd = new ChartData(cdddd);
+    cddddd->isTitle = true;
+    cddddd->title = "title3";
+    cddddd->color = QColor(rand() % 255, rand() % 255, rand() % 255);
+    cddddd->height = 20;
+    charts.push_back(cddddd);
+    ChartData *cdddddd = new ChartData(cddddd);
+    cdddddd->isTitle = true;
+    cdddddd->title = "title4";
+    cdddddd->color = QColor(rand() % 255, rand() % 255, rand() % 255);
+    cdddddd->height = 20;
+    charts.push_back(cdddddd);
+    for (int i = 0; i < 4; i++) {
         ChartData *cd = new ChartData(cdd);
         cd->color = QColor(rand() % 255, rand() % 255, rand() % 255);
         cd->height = 50;
         charts.push_back(cd);
     }
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 3; i++) {
         ChartData *cd = new ChartData(cdddd);
+        cd->color = QColor(rand() % 255, rand() % 255, rand() % 255);
+        cd->height = 50;
+        charts.push_back(cd);
+    }
+    for (int i = 0; i < 4; i++) {
+        ChartData *cd = new ChartData(cdddddd);
+        cd->color = QColor(rand() % 255, rand() % 255, rand() % 255);
+        cd->height = 50;
+        charts.push_back(cd);
+    }
+    for (int i = 0; i < 4; i++) {
+        ChartData *cd = new ChartData(cddddd);
         cd->color = QColor(rand() % 255, rand() % 255, rand() % 255);
         cd->height = 50;
         charts.push_back(cd);
@@ -56,13 +80,21 @@ KChart::KChart(QWidget *parent) :
     QTimer *updateTimer = new QTimer(this);
     connect(updateTimer, &QTimer::timeout, this, [this]() { update(); });
     updateTimer->start(30);
-    charts = SortCharts(charts);
+    charts = SortCharts();
+    chartLabelAreaColor = Qt::gray;
+    chartAreaColor = Qt::white;
 }
 
-QVector<ChartData *> KChart::SortCharts(QVector<ChartData *> &charts)
+/**
+* @brief 对chart排序，使得子节点对应挂载到父节点上
+*/
+QVector<ChartData *> KChart::SortCharts()
 {
+    //对chart排序，使得子节点对应挂载到父节点上，如果一个节点的parent是nullptr，他是顶级节点
     std::queue<ChartData *> tmpCharts;
     QVector<ChartData *> sortCharts;
+    QVector<ChartData *> title;
+    QVector<ChartData *> chart;
     for (ChartData *cd : charts) {
         if (cd->parent == nullptr) {
             tmpCharts.push(cd);
@@ -70,16 +102,38 @@ QVector<ChartData *> KChart::SortCharts(QVector<ChartData *> &charts)
                 ChartData *tmpChartData = tmpCharts.front();
                 sortCharts.push_back(tmpChartData);
                 tmpCharts.pop();
+                chart.clear();
+                title.clear();
                 for (ChartData *cd : charts) {
                     if (cd->level == tmpChartData->level + 1 && cd->parent == tmpChartData) {
-                        tmpCharts.push(cd);
+                        // 这里吧找到的chartdata分类储存
+                        if (cd->isTitle) {
+                            title.push_back(cd);
+                        }
+                        else {
+                            chart.push_back(cd);
+                        }
                     }
+                }
+                // 最后push
+                // 先push chart
+                for (ChartData *cd : chart) {
+                    tmpCharts.push(cd);
+                }
+                // 再push title 因为title下要紧跟chart否则可能同层级既有chart又有title时，会逻辑出错
+                for (ChartData *cd : title) {
+                    tmpCharts.push(cd);
                 }
             }
         }
     }
+    //排完之后，同一层级有title与chart的，chart在前面
+
     return sortCharts;
 }
+/**
+* @brief 计算chart的top，bottom，以及每层title的下一层chart的高度信息等等
+*/
 void KChart::CalculatorChart()
 {
     // 所有chart的高度
@@ -90,27 +144,47 @@ void KChart::CalculatorChart()
     for (int i = 0; i < charts.size(); i++) {
         // 遍历，计算正常的位置
         if (i == 0) {
+            // 如果第一个 top从0 + disappear开始
             charts[i]->top = 0 + disappearArea;
             charts[i]->bottom = charts[i]->top + charts[i]->height;
             allChartHeight += charts[i]->height;
             childrenHeight += charts[i]->height;
-        } else {
+        }
+        else {
+            // 否则下一个的top就是上一个的bottom
             charts[i]->top = charts[i - 1]->bottom;
-            if (charts[i]->isShow) {
+            if (charts[i]->isShow) { // chart可见
+                // 如果是顶级title，不可被隐藏
                 if (charts[i]->parent == nullptr && charts[i]->isTitle) {
                     charts[i]->bottom = charts[i]->top + charts[i]->height;
                     allChartHeight += charts[i]->height;
                     childrenHeight += charts[i]->height;
-                }else if(charts[i]->parent != nullptr && charts[i]->parent->isShow){
-                    charts[i]->bottom = charts[i]->top + charts[i]->height;
-                    allChartHeight += charts[i]->height;
-                    childrenHeight += charts[i]->height;
-                }else{
-                    charts[i]->bottom = charts[i]->top + 0;
-                    allChartHeight += 0;
-                    childrenHeight += 0;
                 }
-            }else{
+                else if (charts[i]->parent != nullptr) { // 如果不是顶级title，父节点可见
+                   //一直往上找，如果所有的parent可见，他就可见，否则不可见
+                   // 所以会存在虽然他是可见的，但是他的父节点或祖父或以上的节点不可见，这时，他的bottom = top，虽然他是可见的
+                    ChartData *chartData = charts[i];
+                    bool flag = true;
+                    while (chartData->parent != nullptr) {
+                        if (!chartData->isShow) {
+                            flag = false;
+                            break;
+                        }
+                        chartData = chartData->parent;
+                    }
+                    if (flag) { //所有父节点都是可见的
+                        charts[i]->bottom = charts[i]->top + charts[i]->height;
+                        allChartHeight += charts[i]->height;
+                        childrenHeight += charts[i]->height;
+                    }
+                    else {
+                        charts[i]->bottom = charts[i]->top + 0;
+                        allChartHeight += 0;
+                        childrenHeight += 0;
+                    }
+                }
+            }
+            else { //chart不可见
                 charts[i]->bottom = charts[i]->top + 0;
                 allChartHeight += 0;
                 childrenHeight += 0;
@@ -128,43 +202,108 @@ void KChart::CalculatorChart()
             }
             if (abs(charts[i]->top - charts[i]->swapingTop) < 2.) {
                 charts[i]->swapingTop = charts[i]->top;
-            } else {
+            }
+            else {
                 charts[i]->swapingTop = (charts[i]->top + 4. * charts[i]->swapingTop) / 5.;
             }
         }
-        if (charts[i]->isTitle) {
-            if (titleCd == nullptr) {
-                titleCd = charts[i];
-                childrenHeight = 0;
-                titleCd->childMinTop = titleCd->bottom;
-            } else {
-                titleCd->allChildrenHeight = childrenHeight - titleCd->height;
-                childrenHeight = 0;
-                titleCd = charts[i];
-                titleCd->childMinTop = titleCd->bottom;
+        if (charts[i]->isTitle) { //如果是title，需要计算一些值
+            if (titleCd == nullptr) { // 如果titleCd是空的，证明这是第一个找到的title
+                titleCd = charts[i]; //把title赋值给titleCD
+                titleCd->childMinTop = titleCd->bottom; // 获取到子child的第一个高度,他将与allChildrenheight决定子chart能够交换位置的空间(同一个父节点下的才能交换)
+            }
+            else {
+                titleCd->allChildrenHeight = childrenHeight - titleCd->height; //找到了下一个title，将此时计算的childrenheight - 自身的高度，赋值给上一个title
+                titleCd = charts[i]; // titleCd 换成新找到的
+                titleCd->childMinTop = titleCd->bottom; // 老规矩
             }
             childrenHeight = 0;
         }
     }
+    // 当遍历结束，找到最后一个chart后，吧计算的结果赋值给上一个找到的titieCd,很重要，否则最后一个title没有child高度，不能进行child交换
     if (titleCd != nullptr) {
         titleCd->allChildrenHeight = childrenHeight;
         titleCd->childMinTop = titleCd->bottom;
     }
+    CalculatorTitleVaule();
+}
+/**
+* @brief 计算每层title下面所有子节点的高度(以后可能做title交换用，谁知道什么时候实现呢☺)
+*/
+void KChart::CalculatorTitleVaule()
+{
+    QVector<int> topTitleIndex;
+    for (unsigned int i = 0; i < charts.size(); i++) {
+        ChartData *cd = charts[i];
+        if (cd->isTitle && cd->parent == nullptr) {
+            topTitleIndex.push_back(i);
+        }
+    }
+    int last = charts.size() - 1;
+    for (int i = topTitleIndex.size() - 1; i >= 0; i--) {
+        int allHeight = 0;
+        for (int j = last; j >= topTitleIndex[i]; j--) {
+            if (charts[j]->isTitle) {
+                if (charts[j]->allChildrenHeight == 0) {
+                    charts[j]->allHeight = allHeight;
+                }
+                else {
+                    allHeight += charts[j]->allChildrenHeight;
+                    charts[j]->allHeight = allHeight;
+                    allHeight += charts[j]->height;
+                }
+            }
+        }
+        last = topTitleIndex[i] - 1;
+    }
+    int yy = 0;
 }
 
 void KChart::paintEvent(QPaintEvent *event)
 {
     CalculatorChart();
     QPainter p(this);
+    p.setRenderHints(QPainter::Antialiasing, true);
+    p.setRenderHints(QPainter::TextAntialiasing, true);
     int isSelect = -1;
     for (int i = 0; i < charts.size(); i++) {
         // 不可见的就不画了
         if (charts[i]->bottom < 0 || charts[i]->top > height()) {
             continue;
         }
-        if (charts[i]->isTitle) {
+        if (charts[i]->isTitle) { //如果是title，并且可见
             if (charts[i]->isShow) {
-                p.drawText(QRectF(0, charts[i]->top, width(), charts[i]->bottom - charts[i]->top),
+                // 画展开标志
+                double iconLongWidth = charts[i]->height / 2;
+                double iconShortWidth = charts[i]->height / 4;
+                QPainterPath path;
+                if (!charts[i]->children.isEmpty()) { //判断子节点是否为空
+                    if (charts[i]->bottom - charts[i]->top != 0) { // 判断节点虽然可见，但是他的父节点是否允许他显示
+                        if (charts[i]->children[0]->isShow) { // 判断子节点的展开情况
+                            path.moveTo(iconShortWidth + charts[i]->level * iconSpacing, iconLongWidth + charts[i]->top);
+                            path.lineTo(iconShortWidth + iconLongWidth + charts[i]->level * iconSpacing, iconLongWidth + charts[i]->top);
+                            path.lineTo(iconShortWidth * 2 + charts[i]->level * iconSpacing, iconLongWidth + charts[i]->top + iconShortWidth);
+                            path.lineTo(iconShortWidth + charts[i]->level * iconSpacing, iconLongWidth + charts[i]->top);
+                        }
+                        else {
+                            path.moveTo(charts[i]->level * iconSpacing + iconShortWidth, iconShortWidth + charts[i]->top);
+                            path.lineTo(charts[i]->level * iconSpacing + iconLongWidth, iconLongWidth + charts[i]->top);
+                            path.lineTo(charts[i]->level * iconSpacing + iconShortWidth, iconLongWidth + charts[i]->top + iconShortWidth);
+                            path.lineTo(charts[i]->level * iconSpacing + iconShortWidth, iconShortWidth + charts[i]->top);
+                        }
+                    }
+                }
+
+                QLinearGradient linear(QPointF(width(), charts[i]->bottom), QPointF(0, charts[i]->top));
+                linear.setColorAt(0, Qt::black);
+                linear.setColorAt(1, Qt::gray);
+
+                // 设置显示模式
+                linear.setSpread(QGradient::PadSpread);
+                p.fillRect(QRectF(0, charts[i]->top, width(), charts[i]->bottom - charts[i]->top), linear);
+                // 画标志
+                p.fillPath(path, Qt::black);
+                p.drawText(QRectF((charts[i]->level + 1) * iconSpacing + iconLongWidth, charts[i]->top, width(), charts[i]->bottom - charts[i]->top),
                            Qt::AlignVCenter,
                            charts[i]->title);
             }
@@ -172,17 +311,32 @@ void KChart::paintEvent(QPaintEvent *event)
         // 如果没有被拖拽，没有在交换，正常画
         if (charts[i]->isDraging == false && charts[i]->isSwaping == false) {
             QRectF chartRect(0, charts[i]->top, width(), charts[i]->bottom - charts[i]->top);
-            p.fillRect(chartRect, charts[i]->color);
+            p.fillRect(chartRect, chartAreaColor);
+            double chartHeight = charts[i]->bottom - charts[i]->top;
+            chartHeight == 0 ? 0 : chartHeight - 1.;
+            QRectF chartLabelRect(0, charts[i]->top + 0.5, chartLabelAreaWidth, chartHeight);
+            p.fillRect(chartLabelRect, chartLabelAreaColor);
+            p.drawText(chartLabelRect, Qt::AlignCenter, charts[i]->label);
         } else if (charts[i]->isDraging) { // 如果正在拖拽，记下位置，最后画
             isSelect = i;
         } else if (charts[i]->isSwaping) { // 如果正在交换，top是swapingtop。正在变化，有动画效果
             QRectF chartRect(0, charts[i]->swapingTop, width(), charts[i]->height);
-            p.fillRect(chartRect, charts[i]->color);
+            p.fillRect(chartRect, chartAreaColor);
+            double chartHeight = charts[i]->bottom - charts[i]->top;
+            chartHeight == 0 ? 0 : chartHeight - 1.;
+            QRectF chartLabelRect(0, charts[i]->swapingTop + 0.5, chartLabelAreaWidth, chartHeight);
+            p.fillRect(chartLabelRect, chartLabelAreaColor);
+            p.drawText(chartLabelRect, Qt::AlignCenter, charts[i]->label);
         }
     }
     if (isSelect != -1) {
         QRect chartRect(0, charts[isSelect]->dragTop, rect().width(), charts[isSelect]->height);
-        p.fillRect(chartRect, charts[isSelect]->color);
+        p.fillRect(chartRect, chartAreaColor);
+        double chartHeight = charts[isSelect]->bottom - charts[isSelect]->top;
+        chartHeight == 0 ? 0 : chartHeight - 1.;
+        QRectF chartLabelRect(0, charts[isSelect]->dragTop + 0.5, chartLabelAreaWidth, chartHeight);
+        p.fillRect(chartLabelRect, chartLabelAreaColor);
+        p.drawText(chartLabelRect, Qt::AlignCenter, charts[isSelect]->label);
     }
 }
 
@@ -286,7 +440,7 @@ void KChart::mouseMoveEvent(QMouseEvent *e)
 void KChart::mousePressEvent(QMouseEvent *e)
 {
     for (ChartData *cd : charts) {
-        QRect chartRect(0, cd->top, rect().width(), cd->height);
+        QRect chartRect(0, cd->top, chartLabelAreaWidth, cd->bottom - cd->top);
         if (chartRect.contains(e->pos())) {
             if (cd->isShow) {
                 if (cd->isTitle) {
@@ -350,7 +504,12 @@ void KChart::wheelEvent(QWheelEvent *e)
     } else {
         // chart上下滚动,如果chart总高度不大于窗口高度,不管
         if (allChartHeight <= height()) {
-            return;
+            if (disappearArea < 0 && e->delta() > 0) {
+                disappearArea += 10;
+            }
+            else {
+                return;
+            }
         }
         // 如果向上滑动,第一个不会大于最顶端
         if (e->delta() > 0) {
