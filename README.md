@@ -6,4 +6,4 @@ TimeRuler
 
 KChart
 
-开发中...
+![KChart](https://github.com/suncaiyu/Custom_QChart/blob/master/Resource/KChart.png)
