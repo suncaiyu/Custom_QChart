@@ -24,6 +24,8 @@ protected:
     void mouseMoveEvent(QMouseEvent *event) override;
     void mousePressEvent(QMouseEvent *e) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
+    void enterEvent(QEvent *e)override { winContext.isMouseOnTimeRuler = true; };
+    void leaveEvent(QEvent *e)override { winContext.isMouseOnTimeRuler = false; };
 
 private:
     Ui::TimeRuler *ui;

@@ -20,6 +20,7 @@ public:
     int nowPosToRight = 70; //自动滚，距离右侧的像素点
     double darkBeforeZero;
     bool pressShift = false;
+    bool isMouseOnTimeRuler = false;
 };
 
 #endif // CHARTWINDOWCONTEXT_H

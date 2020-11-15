@@ -281,7 +281,89 @@ void KChart::CalculatorTitleVaule()
         }
         last = topTitleIndex[i] - 1;
     }
-    int yy = 0;
+}
+
+
+void KChart::PaintTitle(QPainter &p, ChartData *cd)
+{
+    //如果是title，并且可见
+    if (cd->isShow) {
+        // 画展开标志
+        double iconLongWidth = cd->height / 2;
+        double iconShortWidth = cd->height / 4;
+        QPainterPath path;
+        if (!cd->children.isEmpty()) { //判断子节点是否为空
+            if (cd->bottom - cd->top != 0) { // 判断节点虽然可见，但是他的父节点是否允许他显示
+                if (cd->children[0]->isShow) { // 判断子节点的展开情况
+                    path.moveTo(iconShortWidth + cd->level * iconSpacing, iconLongWidth + cd->top);
+                    path.lineTo(iconShortWidth + iconLongWidth + cd->level * iconSpacing, iconLongWidth + cd->top);
+                    path.lineTo(iconShortWidth * 2 + cd->level * iconSpacing, iconLongWidth + cd->top + iconShortWidth);
+                    path.lineTo(iconShortWidth + cd->level * iconSpacing, iconLongWidth + cd->top);
+                }
+                else {
+                    path.moveTo(cd->level * iconSpacing + iconShortWidth, iconShortWidth + cd->top);
+                    path.lineTo(cd->level * iconSpacing + iconLongWidth, iconLongWidth + cd->top);
+                    path.lineTo(cd->level * iconSpacing + iconShortWidth, iconLongWidth + cd->top + iconShortWidth);
+                    path.lineTo(cd->level * iconSpacing + iconShortWidth, iconShortWidth + cd->top);
+                }
+            }
+        }
+
+        QLinearGradient linear(QPointF(width(), cd->bottom), QPointF(0, cd->top));
+        linear.setColorAt(0, Qt::black);
+        linear.setColorAt(1, Qt::gray);
+
+        // 设置显示模式
+        linear.setSpread(QGradient::PadSpread);
+        p.fillRect(QRectF(0, cd->top, width(), cd->bottom - cd->top), linear);
+        // 画标志
+        p.fillPath(path, Qt::black);
+        p.drawText(QRectF((cd->level + 1) * iconSpacing + iconLongWidth, cd->top, width(), cd->bottom - cd->top),
+            Qt::AlignVCenter,
+            cd->title);
+    }
+}
+
+void KChart::PaintNormalChart(QPainter &p, ChartData *cd)
+{
+    QRectF chartRect(0, cd->top, width(), cd->bottom - cd->top);
+    p.fillRect(chartRect, chartAreaColor);
+    p.save();
+    PaintData(p, cd);
+    p.restore();
+    double chartHeight = cd->bottom - cd->top;
+    chartHeight == 0 ? 0 : chartHeight - 1.;
+    QRectF chartLabelRect(0, cd->top + 0.5, chartLabelAreaWidth, chartHeight);
+    p.fillRect(chartLabelRect, chartLabelAreaColor);
+    p.drawText(chartLabelRect, Qt::AlignCenter, cd->label);
+}
+
+void KChart::PaintDragingChart(QPainter &p, ChartData *cd)
+{
+    QRect chartRect(0, cd->dragTop, rect().width(), cd->height);
+    p.fillRect(chartRect, chartAreaColor);
+    p.save();
+    PaintData(p, cd);
+    p.restore();
+    double chartHeight = cd->bottom - cd->top;
+    chartHeight == 0 ? 0 : chartHeight - 1.;
+    QRectF chartLabelRect(0, cd->dragTop + 0.5, chartLabelAreaWidth, chartHeight);
+    p.fillRect(chartLabelRect, chartLabelAreaColor);
+    p.drawText(chartLabelRect, Qt::AlignCenter, cd->label);
+}
+
+void KChart::PaintSwapingChart(QPainter &p, ChartData *cd)
+{
+    QRectF chartRect(0, cd->swapingTop, width(), cd->height);
+    p.fillRect(chartRect, chartAreaColor);
+    p.save();
+    PaintData(p, cd);
+    p.restore();
+    double chartHeight = cd->bottom - cd->top;
+    chartHeight == 0 ? 0 : chartHeight - 1.;
+    QRectF chartLabelRect(0, cd->swapingTop + 0.5, chartLabelAreaWidth, chartHeight);
+    p.fillRect(chartLabelRect, chartLabelAreaColor);
+    p.drawText(chartLabelRect, Qt::AlignCenter, cd->label);
 }
 
 void KChart::paintEvent(QPaintEvent *event)
@@ -296,82 +378,22 @@ void KChart::paintEvent(QPaintEvent *event)
         if (charts[i]->bottom < 0 || charts[i]->top > height()) {
             continue;
         }
-        if (charts[i]->isTitle) { //如果是title，并且可见
-            if (charts[i]->isShow) {
-                // 画展开标志
-                double iconLongWidth = charts[i]->height / 2;
-                double iconShortWidth = charts[i]->height / 4;
-                QPainterPath path;
-                if (!charts[i]->children.isEmpty()) { //判断子节点是否为空
-                    if (charts[i]->bottom - charts[i]->top != 0) { // 判断节点虽然可见，但是他的父节点是否允许他显示
-                        if (charts[i]->children[0]->isShow) { // 判断子节点的展开情况
-                            path.moveTo(iconShortWidth + charts[i]->level * iconSpacing, iconLongWidth + charts[i]->top);
-                            path.lineTo(iconShortWidth + iconLongWidth + charts[i]->level * iconSpacing, iconLongWidth + charts[i]->top);
-                            path.lineTo(iconShortWidth * 2 + charts[i]->level * iconSpacing, iconLongWidth + charts[i]->top + iconShortWidth);
-                            path.lineTo(iconShortWidth + charts[i]->level * iconSpacing, iconLongWidth + charts[i]->top);
-                        }
-                        else {
-                            path.moveTo(charts[i]->level * iconSpacing + iconShortWidth, iconShortWidth + charts[i]->top);
-                            path.lineTo(charts[i]->level * iconSpacing + iconLongWidth, iconLongWidth + charts[i]->top);
-                            path.lineTo(charts[i]->level * iconSpacing + iconShortWidth, iconLongWidth + charts[i]->top + iconShortWidth);
-                            path.lineTo(charts[i]->level * iconSpacing + iconShortWidth, iconShortWidth + charts[i]->top);
-                        }
-                    }
-                }
-
-                QLinearGradient linear(QPointF(width(), charts[i]->bottom), QPointF(0, charts[i]->top));
-                linear.setColorAt(0, Qt::black);
-                linear.setColorAt(1, Qt::gray);
-
-                // 设置显示模式
-                linear.setSpread(QGradient::PadSpread);
-                p.fillRect(QRectF(0, charts[i]->top, width(), charts[i]->bottom - charts[i]->top), linear);
-                // 画标志
-                p.fillPath(path, Qt::black);
-                p.drawText(QRectF((charts[i]->level + 1) * iconSpacing + iconLongWidth, charts[i]->top, width(), charts[i]->bottom - charts[i]->top),
-                           Qt::AlignVCenter,
-                           charts[i]->title);
-            }
+        if (charts[i]->isTitle) { 
+            PaintTitle(p, charts[i]);
         }else
         // 如果没有被拖拽，没有在交换，正常画
         if (charts[i]->isDraging == false && charts[i]->isSwaping == false) {
-            QRectF chartRect(0, charts[i]->top, width(), charts[i]->bottom - charts[i]->top);
-            p.fillRect(chartRect, chartAreaColor);
-            p.save();
-            PaintData(p, charts[i]);
-            p.restore();
-            double chartHeight = charts[i]->bottom - charts[i]->top;
-            chartHeight == 0 ? 0 : chartHeight - 1.;
-            QRectF chartLabelRect(0, charts[i]->top + 0.5, chartLabelAreaWidth, chartHeight);
-            p.fillRect(chartLabelRect, chartLabelAreaColor);
-            p.drawText(chartLabelRect, Qt::AlignCenter, charts[i]->label);
+            PaintNormalChart(p, charts[i]);
         } else if (charts[i]->isDraging) { // 如果正在拖拽，记下位置，最后画
             isSelect = i;
         } else if (charts[i]->isSwaping) { // 如果正在交换，top是swapingtop。正在变化，有动画效果
-            QRectF chartRect(0, charts[i]->swapingTop, width(), charts[i]->height);
-            p.fillRect(chartRect, chartAreaColor);
-            p.save();
-            PaintData(p, charts[i]);
-            p.restore();
-            double chartHeight = charts[i]->bottom - charts[i]->top;
-            chartHeight == 0 ? 0 : chartHeight - 1.;
-            QRectF chartLabelRect(0, charts[i]->swapingTop + 0.5, chartLabelAreaWidth, chartHeight);
-            p.fillRect(chartLabelRect, chartLabelAreaColor);
-            p.drawText(chartLabelRect, Qt::AlignCenter, charts[i]->label);
+            PaintSwapingChart(p, charts[i]);
         }
     }
     if (isSelect != -1) {
-        QRect chartRect(0, charts[isSelect]->dragTop, rect().width(), charts[isSelect]->height);
-        p.fillRect(chartRect, chartAreaColor);
-        p.save();
-        PaintData(p, charts[isSelect]);
-        p.restore();
-        double chartHeight = charts[isSelect]->bottom - charts[isSelect]->top;
-        chartHeight == 0 ? 0 : chartHeight - 1.;
-        QRectF chartLabelRect(0, charts[isSelect]->dragTop + 0.5, chartLabelAreaWidth, chartHeight);
-        p.fillRect(chartLabelRect, chartLabelAreaColor);
-        p.drawText(chartLabelRect, Qt::AlignCenter, charts[isSelect]->label);
+        PaintDragingChart(p, charts[isSelect]);
     }
+    PaintMeasureLine(p);
 }
 
 KChart::~KChart()
@@ -585,8 +607,8 @@ void KChart::PaintData(QPainter &p, ChartData *cd)
 {
     //PaintLineData(p, cd);
     //PaintBarData(p,cd);
-    PaintBarData_2(p,cd);
-    //PaintLineData_2(p,cd);
+    //PaintBarData_2(p,cd);
+    PaintLineData_2(p,cd);
 }
 void KChart::PaintLineData(QPainter &p, ChartData *cd)
 {
@@ -636,8 +658,12 @@ void KChart::PaintLineData_2(QPainter &p, ChartData *cd)
         return;
     }
     QPointF preDot(-1, -1);
-    for (Data *d : cd->data) {
-        if (d->time < timeLine->GetLeftTime() || d->time > timeLine->GetRightTime()) {
+    for (int i = 0; i < cd->data.size(); i++) {
+        Data *d = cd->data[i];
+        if (i != 0 && (d->time > timeLine->GetRightTime() && cd->data[i - 1]->time > timeLine->GetRightTime())) {
+            continue;
+        }
+        if (i != cd->data.size() - 1 && (d->time < timeLine->GetLeftTime() && cd->data[i + 1]->time < timeLine->GetLeftTime())) {
             continue;
         }
         double usefulHeight = cd->height * 4. / 5.; // 画图不占满高，值占用4/5，好看一点
@@ -666,8 +692,18 @@ void KChart::PaintLineData_2(QPainter &p, ChartData *cd)
         QPainterPath path;
         path.moveTo(preDot);
         path.lineTo(nowDot);
-        path.lineTo(nowDot.x(), cd->bottom - padding);
-        path.lineTo(preDot.x(), cd->bottom - padding);
+        if (cd->isDraging) {
+            path.lineTo(nowDot.x(), cd->dragTop + cd->height - padding);
+            path.lineTo(preDot.x(), cd->dragTop + cd->height - padding);
+        }
+        else if (cd->isSwaping) {
+            path.lineTo(nowDot.x(), cd->swapingTop + cd->height - padding);
+            path.lineTo(preDot.x(), cd->swapingTop + cd->height - padding);
+        }
+        else {
+            path.lineTo(nowDot.x(), cd->bottom - padding);
+            path.lineTo(preDot.x(), cd->bottom - padding);
+        }
         p.fillPath(path, QColor(cd->color.red(), cd->color.green(), cd->color.blue(), 100));
         p.drawLine(preDot, nowDot);
         preDot = nowDot;
@@ -754,7 +790,16 @@ void KChart::PaintBarData_2(QPainter &p, ChartData *cd)
             continue;
         }
         p.setPen(cd->color);
-        QRectF barRect(preDot.x(), preDot.y(),nowDot.x() - preDot.x(),cd->bottom - padding - preDot.y());
+        QRectF barRect;
+        if (cd->isDraging) {
+            barRect = QRectF(preDot.x(), preDot.y(), nowDot.x() - preDot.x(), cd->dragTop + cd->height - padding - preDot.y());
+        }
+        else if (cd->isSwaping) {
+            barRect = QRectF(preDot.x(), preDot.y(), nowDot.x() - preDot.x(), cd->swapingTop + cd->height - padding - preDot.y());
+        }
+        else {
+            barRect = QRectF(preDot.x(), preDot.y(), nowDot.x() - preDot.x(), cd->bottom - padding - preDot.y());
+        }
         p.fillRect(barRect, QColor(cd->color.red(),cd->color.green(), cd->color.blue(), 100));
         p.drawLine(preDot, QPointF(nowDot.x(), preDot.y()));
         p.drawLine(QPointF(nowDot.x(), preDot.y()), nowDot);
@@ -762,6 +807,60 @@ void KChart::PaintBarData_2(QPainter &p, ChartData *cd)
         if (cd->showData) {
             p.setPen(Qt::black);
             p.drawText(nowDot, QString::number(d->value));
+        }
+    }
+}
+
+void KChart::PaintMeasureLine(QPainter &p)
+{
+    if (timeLine->winContext.isMouseOnTimeRuler) {
+        if (timeLine->winContext.mouseLocationX < chartLabelAreaWidth) {
+            return;
+        }
+        QPointF start(timeLine->winContext.mouseLocationX, 0);
+        QPointF end;
+        if (allChartHeight + disappearArea > height()) {
+            end = QPointF(timeLine->winContext.mouseLocationX, height());
+        }
+        else {
+            end = QPointF(timeLine->winContext.mouseLocationX, allChartHeight + disappearArea);
+        }
+        p.save();
+        p.setPen(QColor(0, 0, 0, 100));
+        p.drawLine(start, end);
+        p.restore();
+
+        for (int i = 0; i < charts.size(); i++) {
+            ChartData *cd = charts[i];
+            if (cd->bottom - cd->top == 0) {
+                return;
+            }
+            if (cd->bottom < 0 && cd->top > height()) {
+                continue;
+            }
+            for (int i = 0; i < cd->data.size(); i++) {
+                if (cd->data[i]->time < timeLine->GetLeftTime() || cd->data[i]->time > timeLine->GetRightTime()) {
+                    continue;
+                }
+                if (i == 0 || i == cd->data.size() - 1) {
+                    continue;
+                }
+                else {
+                    long long preX = cd->data[i - 1]->time * timeLine->winContext.viewWindowA + timeLine->winContext.viewWindowB;
+                    long long nowX = cd->data[i]->time * timeLine->winContext.viewWindowA + timeLine->winContext.viewWindowB;
+                    long long midX = (nowX + preX) / 2.;
+                    QString preVaule = QString::number(cd->data[i - 1]->value);
+                    QString nowVaule = QString::number(cd->data[i]->value);
+                    if (timeLine->winContext.mouseLocationX >= preX && timeLine->winContext.mouseLocationX < midX) {
+                        QPointF textPoint(cd->data[i - 1]->time * timeLine->winContext.viewWindowA + timeLine->winContext.viewWindowB, cd->top + 8);
+                        p.drawText(textPoint, preVaule);
+                    }
+                    else if (timeLine->winContext.mouseLocationX >= midX && timeLine->winContext.mouseLocationX < nowX) {
+                        QPointF textPoint(cd->data[i]->time * timeLine->winContext.viewWindowA + timeLine->winContext.viewWindowB, cd->top + 8);
+                        p.drawText(textPoint, nowVaule);
+                    }
+                }
+            }
         }
     }
 }

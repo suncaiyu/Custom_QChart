@@ -39,6 +39,12 @@ private:
     QColor chartLabelAreaColor;
     QColor chartAreaColor;
     double iconSpacing = 15; // 每一级的间距
+
+    void PaintTitle(QPainter &p, ChartData *cd);
+    void PaintNormalChart(QPainter &p, ChartData *cd);
+    void PaintDragingChart(QPainter &p, ChartData *cd);
+    void PaintSwapingChart(QPainter &p, ChartData *cd);
+    void PaintMeasureLine(QPainter &p);
     void PaintData(QPainter &p, ChartData *cd);
 
     void PaintLineData(QPainter &p, ChartData *cd);

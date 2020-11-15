@@ -40,24 +40,27 @@
     <ClCompile Include="ChartData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ChartWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="KChart.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MainWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="TimeRuler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ChartWidget.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ChartData.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ChartWidget.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="KChart.h">
@@ -69,19 +72,33 @@
     <QtMoc Include="TimeRuler.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="ChartWidget.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
   </ItemGroup>
   <ItemGroup>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     <CustomBuild Include="debug\moc_predefs.h.cbt">
       <Filter>Generated Files</Filter>
     </CustomBuild>
     <CustomBuild Include="release\moc_predefs.h.cbt">
       <Filter>Generated Files</Filter>
     </CustomBuild>
+    
+    
+    
+    
   </ItemGroup>
   <ItemGroup>
+    <QtUic Include="ChartWidget.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
     <QtUic Include="KChart.ui">
       <Filter>Form Files</Filter>
     </QtUic>
@@ -91,13 +108,5 @@
     <QtUic Include="TimeRuler.ui">
       <Filter>Form Files</Filter>
     </QtUic>
-    <QtUic Include="ChartWidget.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="ChartWindowContext.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

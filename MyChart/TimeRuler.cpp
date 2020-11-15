@@ -274,6 +274,7 @@ void TimeRuler::PaintMouseMeasureLine(QPainter *p)
                                               - winContext.viewWindowB)
                                              / winContext.viewWindowA);
 
+        //对应的坐标x
 
         long long line1X = mouseOnTime * winContext.viewWindowA + winContext.viewWindowB;
         long long line2X = (mouseOnTime + 1) * winContext.viewWindowA

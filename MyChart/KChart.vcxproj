@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{62BDEA9D-C1FD-32F6-A186-94D9C392E024}</ProjectGuid>
+    <ProjectGuid>{03AE87F1-8693-3E6F-9FFF-674E1ADA2A25}</ProjectGuid>
     <RootNamespace>KChart</RootNamespace>
     <Keyword>QtVS_v303</Keyword>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
@@ -350,15 +350,19 @@
     <ClCompile Include="ChartWidget.cpp" />
     <ClCompile Include="KChart.cpp" />
     <ClCompile Include="MainWindow.cpp" />
-    <ClCompile Include="main.cpp" />
     <ClCompile Include="TimeRuler.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ChartData.h">
     </QtMoc>
+    <QtMoc Include="ChartWidget.h">
+    </QtMoc>
     <QtMoc Include="KChart.h">
     </QtMoc>
     <QtMoc Include="MainWindow.h">
+    </QtMoc>
+    <QtMoc Include="TimeRuler.h">
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
@@ -390,17 +394,14 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <QtUic Include="ChartWidget.ui" />
+    <QtUic Include="ChartWidget.ui">
+    </QtUic>
     <QtUic Include="KChart.ui">
     </QtUic>
     <QtUic Include="MainWindow.ui">
     </QtUic>
-    <QtUic Include="TimeRuler.ui" />
-  </ItemGroup>
-  <ItemGroup>
-    <QtMoc Include="ChartWidget.h" />
-    <ClInclude Include="ChartWindowContext.h" />
-    <QtMoc Include="TimeRuler.h" />
+    <QtUic Include="TimeRuler.ui">
+    </QtUic>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
