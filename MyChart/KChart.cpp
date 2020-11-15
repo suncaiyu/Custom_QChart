@@ -607,8 +607,8 @@ void KChart::PaintData(QPainter &p, ChartData *cd)
 {
     //PaintLineData(p, cd);
     //PaintBarData(p,cd);
-    //PaintBarData_2(p,cd);
-    PaintLineData_2(p,cd);
+    PaintBarData_2(p,cd);
+    //PaintLineData_2(p,cd);
 }
 void KChart::PaintLineData(QPainter &p, ChartData *cd)
 {
@@ -763,8 +763,12 @@ void KChart::PaintBarData_2(QPainter &p, ChartData *cd)
         return;
     }
     QPointF preDot(-1, -1);
-    for (Data *d : cd->data) {
-        if (d->time < timeLine->GetLeftTime() || d->time > timeLine->GetRightTime()) {
+    for (int i = 0; i < cd->data.size(); i++) {
+        Data *d = cd->data[i];
+        if (i != 0 && (d->time > timeLine->GetRightTime() && cd->data[i - 1]->time > timeLine->GetRightTime())) {
+            continue;
+        }
+        if (i != cd->data.size() - 1 && (d->time < timeLine->GetLeftTime() && cd->data[i + 1]->time < timeLine->GetLeftTime())) {
             continue;
         }
         double usefulHeight = cd->height * 4. / 5.; // 画图不占满高，值占用4/5，好看一点
