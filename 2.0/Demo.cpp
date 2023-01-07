@@ -9,7 +9,7 @@ Demo::Demo(QWidget *parent)
     mLayout = std::make_shared<QVBoxLayout>();
     mChart = std::make_shared<Chart>();
     mLayout->addWidget(mChart.get());
-    mLayout->setMargin(0);
+    mLayout->setContentsMargins(0, 0, 0, 0);
     mLayout->setSpacing(0);
     setLayout(mLayout.get());
 }

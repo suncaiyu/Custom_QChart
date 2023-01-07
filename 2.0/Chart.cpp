@@ -1,6 +1,7 @@
 ﻿#include "Chart.h"
 #include <QPainter>
 #include <QMouseEvent>
+#include <QPainterPath>
 #include <QDebug>
 
 namespace  {
@@ -15,7 +16,7 @@ constexpr int FLAG_WIDTH = 16;
 Chart::Chart(QWidget *parent) : QWidget(parent)
 {
     InitData();
-    mTimeID = startTimer(35);
+    mTimeID = startTimer(20);
 }
 
 void Chart::InitData()
@@ -87,38 +88,44 @@ void Chart::DrawChart(QPainter &p, ChartData *data, int &h)
         return;
     }
     if (isDown) {
-    data->mTop = h;
+        data->mTop = h;
     }
     QRect rc;
     rc.setX(0);
+    // 被拖拽释放的
     if (data->mFloatingY != 0.0f) {
-           qreal top = data->mTop;
+           qreal top = data->mTop + mPan;
            qreal fTop = data->mFloatingY;
-           qDebug() << top << "...." << fTop;
+//           qDebug() << top << "...." << fTop;
            qreal cy = 0.0f;
-           cy = (top + fTop) / 2.0f;
+           cy = (top + 2.0 * fTop) / 3.0f;
+//           cy = (top + 4.0 * fTop) / 5.0f;
            rc.setTop(cy);
-           if (qAbs(cy - data->mTop) < 2.0f) {
+           if (qAbs(cy - top) < 2.0f) {
                data->ClearFloatingY();
            } else {
                data->SetFloatingY(cy);
            }
        }
+    // 鼠标拖动的
     else if (data->mIsDraging && mSelected != nullptr) {
         rc.setTop(data->mDragingPoint - data->mDistanceTopPoint + mPan);
     }
+    // 跟随父节点拖动的
     else if (data->mIsDraging && mSelected == nullptr) {
         data->mDragingPoint = (data->mDragingPoint - data->mDistanceTopPoint + data->mTop) / 2.0f + data->mDistanceTopPoint;
         rc.setTop(data->mDragingPoint - data->mDistanceTopPoint + mPan);
-        if (qAbs(data->mDragingPoint - data->mTop) < 2.0f) {
+        if (qAbs(data->mDragingPoint - data->mTop + mPan) < 2.0f) {
             data->mIsDraging = false;
         }
     }
+    // 啥也不是的
     else {
-        rc.setTop(h + mPan);
+//        rc.setTop(h + mPan);
+        rc.setY(h + mPan);
     }
     if (!isDown) {
-    data->mTop = h;
+        data->mTop = h;
     }
     rc.setWidth(width());
     rc.setHeight(data->mChartHeight);
@@ -254,8 +261,8 @@ void Chart::mousePressEvent(QMouseEvent *event)
 
 void Chart::mouseReleaseEvent(QMouseEvent *event)
 {
-    if (mSelected) {
-        mSelected->SetFloatingY(event->y() - mPan -(mSelected->mDistanceTopPoint));
+    if (mSelected && mSelected != mRoot) {
+        mSelected->SetFloatingY(event->y()/* - mPan *//*-(mSelected->mDistanceTopPoint)*/);
         mSelected->SetDraging(false);
         mSelected = nullptr;
     }
@@ -285,12 +292,14 @@ void Chart::mouseMoveEvent(QMouseEvent *event)
             isDown = true;
             ChartData* cd = parent->GetChild(index + 1);
             if (cd != nullptr) {
-                if (mSelected->mDragingPoint > cd->mTop) {
+                qDebug() << mSelected->mDragingPoint - mPan;
+                qDebug() << cd->mTop + mPan;
+                if (mSelected->mDragingPoint - mPan > cd->mTop + mPan) {
 //                    mSelected = parent->SwapChild(index, index + 1);
 //                    parent->GetChild(index)->SetFloatingY(event->y()-mPan);
                     parent->mChildrens.swapItemsAt(index, index + 1);
                     mSelected = parent->GetChild(index + 1);
-                    parent->GetChild(index)->SetFloatingY(event->y()-mPan);
+                    parent->GetChild(index)->SetFloatingY(event->y());
                 }
             }
         }
@@ -298,11 +307,11 @@ void Chart::mouseMoveEvent(QMouseEvent *event)
             isDown = false;
             ChartData* cd = parent->GetChild(index - 1);
             if (cd != nullptr) {
-                if (mSelected->mDragingPoint < cd->mTop + cd->mChartHeight) {
+                if (mSelected->mDragingPoint  - mPan< cd->mTop + cd->mChartHeight + mPan) {
                     //QVector有交换元素的函数，自己白写..
                     parent->mChildrens.swapItemsAt(index, index - 1);
                     mSelected = parent->GetChild(index - 1);
-                    parent->GetChild(index)->SetFloatingY(event->y()-mPan);
+                    parent->GetChild(index)->SetFloatingY(event->y());
                 }
             }
         }
@@ -312,5 +321,17 @@ void Chart::mouseMoveEvent(QMouseEvent *event)
 
 void Chart::timerEvent(QTimerEvent *e)
 {
+    update();
+}
+
+void Chart::wheelEvent(QWheelEvent *e)
+{
+    int delta = e->delta();
+    if (delta > 0) {
+        mPan += 10;
+    }
+    if (delta < 0) {
+        mPan -= 10;
+    }
     update();
 }
