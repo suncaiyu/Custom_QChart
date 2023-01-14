@@ -1,5 +1,6 @@
 ﻿#include "MyChart.h"
 #include <QPainter>
+#include <QPainterPath>
 MyChart::MyChart(QQuickItem *parent) :QQuickPaintedItem(parent)
 {
     InitData();
@@ -138,6 +139,9 @@ void MyChart::DrawControlBar(QPainter &p, ChartData *data, QRect rc)
 
 void MyChart::DrawExpandFlag(QPainter &p, ChartData *data, QRect rc)
 {
+    if (data->mChildrens.size() == 0) {
+        return;
+    }
     QPainterPath path;
     p.save();
     p.setRenderHint(QPainter::Antialiasing);
@@ -249,6 +253,9 @@ void MyChart::mouseMoveEvent(QMouseEvent *e)
 
 void MyChart::mouseReleaseEvent(QMouseEvent *e)
 {
+    if (mSelectedChart == nullptr) {
+        return;
+    }
     mSelectedChart->SetDraging(false);
     mSelectedChart->SetFloating(true);
     mSelectedChart = nullptr;

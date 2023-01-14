@@ -8,7 +8,7 @@ set(CMAKE_AUTORCC ON)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-#set( CMAKE_PREFIX_PATH "C:/Qt/6.4.1/msvc2019_64/lib/cmake/Qt6/")
+set( CMAKE_PREFIX_PATH "D:\\Qt\\Qt5.15.2\\vs64_shared\\lib\\cmake\\Qt5")
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick)
 
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Quick)
