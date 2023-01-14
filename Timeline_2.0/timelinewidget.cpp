@@ -2,15 +2,18 @@
 #include <QPainter>
 #include <QTimer>
 #include <QPainterPath>
+#include <QCursor>
+namespace  {
+constexpr int TICK_HEIGHT = 8;
+constexpr float TEXT_SPACING = 1.5f;
+}
 TimelineWidget::TimelineWidget(QQuickItem *parent) : QQuickPaintedItem(parent)
 {
     connect(this, &QQuickPaintedItem::widthChanged, this, &TimelineWidget::WidthChangedSlot);
-    mTimer = std::make_unique<QTimer>();
-    connect(mTimer.get(), &QTimer::timeout, this, [this]() {update(); });
-    mTimer->start(50);
     setAcceptHoverEvents(true);
     setAcceptedMouseButtons(Qt::AllButtons);
     setFlag(ItemAcceptsInputMethod, true);
+    mContext.AddUpdateWidget(this);
 }
 
 TimelineWidget::~TimelineWidget()
@@ -55,68 +58,27 @@ void TimelineWidget::paint(QPainter *painter)
     font.setPointSize(8);
     painter->setFont(font);
     QFontMetrics fm = painter->fontMetrics();
-    painter->fillRect(boundingRect(), Qt::white);
-    int baseLine = 30;
+    painter->fillRect(boundingRect(), GetBackgroundColor());
+    QPen pen = painter->pen();
+    pen.setColor(mBorderColor);
+    painter->setPen(pen);
+    painter->drawRect(boundingRect());
+    int baseLine = 0;
     painter->drawLine(0, baseLine, boundingRect().width(), baseLine);
     QString maxText = QString::number(mRightTime);
     int ticketTextWidth = fm.horizontalAdvance(maxText);
-    long long startTick = mLeftTime - (mLeftTime % mMinStep) - mMinStep;
-    for (long long drawTime = startTick; drawTime < mRightTime + mMinStep; drawTime += mMinStep) {
-        double onScreenX = double(drawTime) * mContext.mZoom + mContext.mDistance;
-        painter->drawLine(onScreenX, baseLine, onScreenX, baseLine + 5);
-
-        if (drawTime % (mMinStep * 100) == 0) {
-            QString show = TransTimeToNatureString(drawTime);
-            int textWidth = fm.horizontalAdvance(show);
-            if (unitTickPixel * 100 > textWidth * 1.5) {
-                painter->drawText(onScreenX - textWidth / 2, baseLine + 15, show);
-            }
-            continue;
-        }
-
-        if (drawTime % (mMinStep * 50) == 0) {
-            QString show = TransTimeToNatureString(drawTime);
-            int textWidth = fm.horizontalAdvance(show);
-            if (unitTickPixel * 50 > textWidth * 1.5) {
-                painter->drawText(onScreenX - textWidth / 2, baseLine + 15, show);
-            }
-            continue;
-        }
-
-        // 每10个ticket做一个标记
-        if (drawTime % (mMinStep * 10) == 0) {
-            QString show = TransTimeToNatureString(drawTime);
-            int textWidth = fm.horizontalAdvance(show);
-            if (unitTickPixel * 10 > textWidth * 1.5) {
-                painter->drawText(onScreenX - textWidth / 2, baseLine + 15, show);
-            }
-            continue;
-        }
-
-        if (drawTime % (mMinStep * 5) == 0) {
-            QString show = TransTimeToNatureString(drawTime);
-            int textWidth = fm.horizontalAdvance(show);
-            if (unitTickPixel * 5 > textWidth * 1.5) {
-                painter->drawText(onScreenX - textWidth / 2, baseLine + 15, show);
-            }
-            continue;
-        }
-
-        QString show = TransTimeToNatureString(drawTime);
-        int textWidth = fm.horizontalAdvance(show);
-        if (unitTickPixel > textWidth * 1.5) {
-            painter->drawText(onScreenX - textWidth / 2, baseLine + 15, show);
-        }
-    }
+    DrawTickAndLabel(painter);
     PaintMouseMeasureLine(painter);
+    DrawControlBar(painter);
 }
 
 void TimelineWidget::wheelEvent(QWheelEvent *event)
 {
     int dic = event->angleDelta().y();
     double mousePos = event->position().x();
-    double mouseOnTimePoint = (mousePos - mContext.mDistance)
+    double timeOnMousePoint = (mousePos - mContext.mDistance - mContext.mControlBarWidth)
         / mContext.mZoom;
+
     if (dic > 0) {
         mContext.mZoom *= 1.22;
     }
@@ -129,21 +91,25 @@ void TimelineWidget::wheelEvent(QWheelEvent *event)
     if (mContext.mZoom < 1.0e-10) {
         mContext.mZoom = 1.0e-10;
     }
-    mContext.mDistance = -(mouseOnTimePoint * mContext.mZoom - mousePos);
-    update();
+    mContext.mDistance = -(timeOnMousePoint * mContext.mZoom - mousePos) - mContext.mControlBarWidth;
     Layout();
 }
 
 void TimelineWidget::mousePressEvent(QMouseEvent *e)
 {
-    mIsPressed = true;
     mPressedPoint = e->pos().x();
+    if (CanChangeControlWidth()) {
+        mChangeControlWidth = true;
+    }
+    if (e->x() > mContext.mControlBarWidth) {
+        mIsPressed = true;
+    }
 }
 
 void TimelineWidget::mouseMoveEvent(QMouseEvent *e)
 {
+    mContext.mMouseOnX = e->pos().x();
     if (mIsPressed) {
-        mContext.mMouseOnX = e->pos().x();
         double distance = e->pos().x() - mPressedPoint;
         mPressedPoint = e->pos().x();
         // 暂定可向左拖动1000像素
@@ -154,12 +120,15 @@ void TimelineWidget::mouseMoveEvent(QMouseEvent *e)
             mContext.mDistance = 1000;
         }
     }
+    if (mChangeControlWidth) {
+        mContext.mControlBarWidth = e->x();
+    }
     Layout();
 }
 
 void TimelineWidget::mouseReleaseEvent(QMouseEvent *e)
 {
-
+    mChangeControlWidth = false;
     mIsPressed = false;
     QQuickPaintedItem::mouseReleaseEvent(e);
 }
@@ -170,27 +139,26 @@ void TimelineWidget::hoverMoveEvent(QHoverEvent *e)
     if (!mIsPressed) {
         mContext.mMouseOnX = e->pos().x();
     }
+    if (CanChangeControlWidth()) {
+        setCursor(Qt::SplitHCursor);
+    } else {
+        setCursor(Qt::ArrowCursor);
+    }
 }
 
 void TimelineWidget::Layout()
 {
     mLeftTime = (long long)(-mContext.mDistance / mContext.mZoom);
-    mRightTime = (long long)((double)(boundingRect().width() - mContext.mDistance) / mContext.mZoom);
+    mRightTime = (long long)((double)(boundingRect().width() - mContext.mDistance - mContext.mControlBarWidth) / mContext.mZoom);
     long long tickOnWindow = mRightTime - mLeftTime + 1;
     // 计算一个像素代表多少ns
-    long long mPerPixel2Ns = tickOnWindow / boundingRect().width() /** 8*/;
+    long long mPerPixel2Ns = tickOnWindow / (boundingRect().width() - mContext.mControlBarWidth);
     // 计算最小显示的步长(间隔多少显示一个ticket)
     mMinStep = 1;
-    while (mPerPixel2Ns > mMinStep) {
+    while (mPerPixel2Ns > mMinStep || mMinStep * mContext.mZoom < 10) {
         mMinStep *= 10;
     }
     unitTickPixel = mMinStep * mContext.mZoom;
-    // 当单元的tick显示距离太短的时候，控制一下
-    while (unitTickPixel < 10) {
-        mMinStep = mMinStep * 10;
-        unitTickPixel = mMinStep * mContext.mZoom;
-    }
-    update();
 }
 
 void TimelineWidget::WidthChangedSlot()
@@ -207,14 +175,13 @@ void TimelineWidget::PaintMouseMeasureLine(QPainter *p)
     p->setFont(font);
     QFontMetrics fm = p->fontMetrics();
     long long mouseOnTime = (long long)(((double)(mContext.mMouseOnX)
-        - mContext.mDistance)
+        - mContext.mDistance - mContext.mControlBarWidth)
         / mContext.mZoom);
 
     //对应的坐标x
-
-    long long lineLeft = mouseOnTime * mContext.mZoom + mContext.mDistance;
+    long long lineLeft = mouseOnTime * mContext.mZoom + mContext.mDistance + mContext.mControlBarWidth;
     long long lineRight = (mouseOnTime + 1) * mContext.mZoom
-        + mContext.mDistance;
+        + mContext.mDistance + mContext.mControlBarWidth;
     long long chartHead = 0;
     int showX = 0;
     QString showTime;
@@ -228,13 +195,95 @@ void TimelineWidget::PaintMouseMeasureLine(QPainter *p)
         showTime = QString::number(mouseOnTime) + "ns";
         chartHead = mouseOnTime;
     }
-    int textWidth = fm.horizontalAdvance(showTime);
+    int textWidth = fm.horizontalAdvance(showTime) + 10;
     if (showX < boundingRect().width() && showX > boundingRect().x()) {
-        pen.setColor(QColor(0, 0, 0));
+        p->save();
+        p->setRenderHint(QPainter::Antialiasing);
+        pen.setColor(mLabelTextColor);
         p->setPen(pen);
-        p->drawText(showX - textWidth / 2 - 1, baseYLocation - 5, showTime);
-        pen.setColor(QColor(205, 205, 0, 100));
-        p->setPen(pen);
-        p->drawLine(showX, baseYLocation - 17, showX, boundingRect().height() - 1);
+        QRect label(showX - textWidth / 2, 0, textWidth, height());
+        QPainterPath path;
+        path.addRoundedRect(label, label.height() / 2, label.height() / 2);
+        p->fillPath(path, mLabelBackgroundColor);
+        p->drawText(label, Qt::AlignCenter, showTime);
+        p->restore();
     }
+}
+
+void TimelineWidget::DrawTickAndLabel(QPainter *painter)
+{
+    QFontMetrics fm = painter->fontMetrics();
+    int baseLine = 0;
+    long long startTick = mLeftTime - (mLeftTime % mMinStep) - mMinStep;
+    for (long long drawTime = startTick; drawTime < mRightTime + mMinStep; drawTime += mMinStep) {
+        double onScreenX = double(drawTime) * mContext.mZoom + mContext.mDistance + mContext.mControlBarWidth;
+        painter->drawLine(onScreenX, baseLine, onScreenX, baseLine + TICK_HEIGHT);
+
+        if (drawTime % (mMinStep * 100) == 0) {
+            QString show = TransTimeToNatureString(drawTime);
+            int textWidth = fm.horizontalAdvance(show);
+            if (unitTickPixel * 100 > textWidth * TEXT_SPACING) {
+                painter->drawText(onScreenX - textWidth / 2, baseLine + TICK_HEIGHT + fm.height(), show);
+            }
+            continue;
+        }
+
+        if (drawTime % (mMinStep * 50) == 0) {
+            QString show = TransTimeToNatureString(drawTime);
+            int textWidth = fm.horizontalAdvance(show);
+            if (unitTickPixel * 50 > textWidth * TEXT_SPACING) {
+                painter->drawText(onScreenX - textWidth / 2, baseLine + TICK_HEIGHT + fm.height(), show);
+            }
+            continue;
+        }
+
+        // 每10个ticket做一个标记
+        if (drawTime % (mMinStep * 10) == 0) {
+            QString show = TransTimeToNatureString(drawTime);
+            int textWidth = fm.horizontalAdvance(show);
+            if (unitTickPixel * 10 > textWidth * TEXT_SPACING) {
+                painter->drawText(onScreenX - textWidth / 2, baseLine + TICK_HEIGHT + fm.height(), show);
+            }
+            continue;
+        }
+
+        if (drawTime % (mMinStep * 5) == 0) {
+            QString show = TransTimeToNatureString(drawTime);
+            int textWidth = fm.horizontalAdvance(show);
+            if (unitTickPixel * 5 > textWidth * TEXT_SPACING) {
+                painter->drawText(onScreenX - textWidth / 2, baseLine + TICK_HEIGHT + fm.height(), show);
+            }
+            continue;
+        }
+
+        QString show = TransTimeToNatureString(drawTime);
+        int textWidth = fm.horizontalAdvance(show);
+        if (unitTickPixel > textWidth * TEXT_SPACING) {
+            painter->drawText(onScreenX - textWidth / 2, baseLine + TICK_HEIGHT + fm.height(), show);
+        }
+    }
+}
+
+void TimelineWidget::DrawControlBar(QPainter *painter)
+{
+    painter->fillRect(QRect(0, 0, mContext.mControlBarWidth, height()), GetBackgroundColor());
+    painter->drawRect(QRect(0, 0, mContext.mControlBarWidth, height()));
+}
+
+QBrush TimelineWidget::GetBackgroundColor()
+{
+    QLinearGradient linear;
+    linear.setStart(0, 0);
+    linear.setFinalStop(0, height());
+    linear.setColorAt(0.0, mBackgroundStart);
+    linear.setColorAt(1.0, mBackgroundEnd);
+    return linear;
+}
+
+bool TimelineWidget::CanChangeControlWidth()
+{
+    if (mContext.mMouseOnX > mContext.mControlBarWidth - 5 && mContext.mMouseOnX < mContext.mControlBarWidth) {
+        return true;
+    }
+    return false;
 }

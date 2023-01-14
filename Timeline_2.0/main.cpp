@@ -12,6 +12,7 @@ int main(int argc, char *argv[])
 
     qmlRegisterType<TimelineWidget>("Furrain.Control", 1, 0, "Timeline");
     qmlRegisterType<MyChart>("Furrain.Control", 1, 0, "MyChart");
+    qRegisterMetaType<TimelineContext*>("TimelineContext*");
 
     QQmlApplicationEngine engine;
     const QUrl url(QStringLiteral("qrc:/main.qml"));
@@ -21,6 +22,5 @@ int main(int argc, char *argv[])
             QCoreApplication::exit(-1);
     }, Qt::QueuedConnection);
     engine.load(url);
-
     return app.exec();
 }

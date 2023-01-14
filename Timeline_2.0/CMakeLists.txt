@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+﻿cmake_minimum_required(VERSION 3.14)
 
 project(Timeline VERSION 0.1 LANGUAGES CXX)
 
@@ -20,6 +20,7 @@ set(PROJECT_SOURCES
         timelinewidget.cpp
         TimelineContext.h
         MyChart.h MyChart.cpp
+        ChartData.cpp ChartData.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
