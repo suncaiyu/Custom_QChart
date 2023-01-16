@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.example.viewgroup.FlowLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:FlowLayout="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    FlowLayout:horizontalSpace="10dp"
+    FlowLayout:verticalSpace="10dp"
+    android:id="@+id/flow_root"
+    tools:context=".FlowActivity">
+
+    <TextView
+        style="@style/TvStyle"
+        android:text="破阵子·为陈同甫赋壮词以寄" />
+
+    <TextView
+        style="@style/TvStyle"
+        android:text="宋·辛弃疾" />
+
+    <TextView
+        style="@style/TvStyle"
+        android:text="醉里挑灯看剑" />
+
+    <TextView
+        style="@style/TvStyle"
+        android:text="梦回吹角连营" />
+
+    <TextView
+        style="@style/TvStyle"
+        android:text="八百里分麾下炙" />
+
+    <TextView
+        style="@style/TvStyle"
+        android:text="五十弦翻塞外声" />
+
+    <TextView
+        style="@style/TvStyle"
+        android:text="沙场秋点兵" />
+
+    <TextView
+        style="@style/TvStyle"
+        android:text="马作的卢飞快" />
+
+    <TextView
+        style="@style/TvStyle"
+        android:text="弓如霹雳弦惊(增加点长度)" />
+
+    <TextView
+        style="@style/TvStyle"
+        android:text="了却君王天下事" />
+
+    <TextView
+        style="@style/TvStyle"
+        android:text="赢得生前身后名" />
+
+    <TextView
+        style="@style/TvStyle"
+        android:text="可怜白发生！" />
+
+</com.example.viewgroup.FlowLayout>
