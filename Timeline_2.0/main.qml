@@ -57,7 +57,7 @@ Window {
                     if (wheel.angleDelta.y > 0) {
                         scrollbar.decrease()
                     }
-                    if (wheel.angleDelta.y < 0) {
+                    if (wheel.angleDelta.y < 0 && scrollbar.size < 1) {
                         scrollbar.increase()
                     }
                 }
