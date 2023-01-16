@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>SkinBase.qml</file>
+        <file>SkinChooser.qml</file>
+        <file>SkinLight.qml</file>
+        <file>SkinDark.qml</file>
+    </qresource>
+    <qresource prefix="/qss">
+        <file>qss.qss</file>
+    </qresource>
+</RCC>
