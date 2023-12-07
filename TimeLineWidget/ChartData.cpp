@@ -1,6 +1,6 @@
 #include "ChartData.h"
 #include <qalgorithms.h>
-
+#include <QCryptographicHash>
 ChartData::ChartData()
 {
 
@@ -10,7 +10,7 @@ ChartData::~ChartData()
 {
     qDeleteAll(mChildrens);
 }
-
+#ifdef CANSWAP
 void ChartData::SetDraging(bool flag, int distance)
 {
     SetChildrenDraging(flag, this, distance);
@@ -52,4 +52,12 @@ void ChartData::SetChildrenFloating(bool flag, ChartData *data)
     for (int i = 0; i < data->mChildrens.size(); i++) {
         SetChildrenFloating(flag, data->mChildrens.at(i));
     }
+}
+#endif
+
+QString ChartData::GetNameHash(QString name)
+{
+    QCryptographicHash hash(QCryptographicHash::Md5);
+    hash.addData(name.toLatin1());
+    return hash.result().toHex().left(6);
 }

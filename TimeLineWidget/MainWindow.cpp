@@ -2,6 +2,7 @@
 #include "./ui_MainWindow.h"
 #include <QDebug>
 #include <QKeyEvent>
+#include <QFile>
 
 void SetQSS(QString path, QWidget *use)
 {
@@ -22,7 +23,7 @@ MainWindow::MainWindow(QWidget *parent)
     mTimeline = std::make_unique <TimelineWidget>();
     mLayout->addWidget(mTimeline.get());
     mLayout->setSpacing(0);
-    mLayout->setMargin(0);
+    mLayout->setContentsMargins(0,0,0,0);
     mChart = std::make_unique<ChartWidget>(mTimeline->GetTimelineContext());
     mLayout->addWidget(mChart.get());
     SetQSS(":/qss2.qss", this);

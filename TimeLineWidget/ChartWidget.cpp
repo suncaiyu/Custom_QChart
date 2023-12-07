@@ -5,6 +5,7 @@
 #include <QPainterPath>
 #include <qdebug.h>
 #include <qpalette.h>
+#include <stdlib.h>
 
 ChartWidget::ChartWidget(TimelineContext &ctx, QWidget *parent) : QWidget(parent), mContext(&ctx)
 {
@@ -73,10 +74,10 @@ void ChartWidget::InitData()
         d->parent = sub1;
         int start = 0;
         for (int j = 0; j < 1000; j++) {
-            start += qrand() % 1000;
+            start += rand() % 1000;
             TimeStamp ts;
             ts.start = start;
-            start += qrand() % 1000;
+            start += rand() % 1000;
             ts.end = start;
             d->mDatas.push_back(ts);
         }
@@ -91,10 +92,10 @@ void ChartWidget::InitData()
         d->parent = sub2;
         long long start = 0;
         for (int j = 0; j < 1000; j++) {
-            start += qrand() % 1000;
+            start += rand() % 1000;
             TimeStamp ts;
             ts.start = start;
-            start += qrand() % 1000;
+            start += rand() % 1000;
             ts.end = start;
             d->mDatas.push_back(ts);
         }
@@ -117,20 +118,15 @@ void ChartWidget::InitData()
         d->parent = sub3sub;
         long long start = 0;
         for (int j = 0; j < 1000; j++) {
-            start += qrand() % 10000;
+            start += rand() % 10000;
             TimeStamp ts;
             ts.start = start;
-            start += qrand() % 10000;
+            start += rand() % 10000;
             ts.end = start;
             d->mDatas.push_back(ts);
         }
     }
 }
-
-//void ChartWidget::keyPressEvent(QKeyEvent *e)
-//{
-//    qDebug() << e->key();
-//}
 
 void ChartWidget::mousePressEvent(QMouseEvent *e)
 {
@@ -162,7 +158,9 @@ void ChartWidget::mousePressEvent(QMouseEvent *e)
                 return;
             }
         }
-    } else if (e->button() == Qt::RightButton && e->modifiers() == Qt::NoModifier) {
+    }
+#ifdef CANSWAP
+    else if (e->button() == Qt::RightButton && e->modifiers() == Qt::NoModifier) {
         ChartData *tmp = GetChartData(e->pos(), mRoot, 0, mContext->mControlBarWidth);
         if (tmp == nullptr) {
             return;
@@ -171,6 +169,7 @@ void ChartWidget::mousePressEvent(QMouseEvent *e)
         mIsDragingChart = tmp;
         mIsDragingChart->SetFloatingYLocation(e->y());
     }
+#endif
     else if (e->button() == Qt::RightButton && e->modifiers() == Qt::ControlModifier) {
         ChartData *tmp = GetChartData(e->pos(), mRoot, 0, mContext->mControlBarWidth);
         if (tmp == nullptr) {
@@ -203,6 +202,7 @@ void ChartWidget::mouseMoveEvent(QMouseEvent *e)
 {
     mContext->mShowTimelineLabel = true;
     mContext->mMouseOnX = e->x();
+#ifdef CANSWAP
     if (mIsDragingChart != nullptr) {
         int distance = e->y() - mIsDragingChart->GetFloatingYLocation();
         mIsDragingChart->SetFloatingYLocation(e->y());
@@ -237,22 +237,25 @@ void ChartWidget::mouseMoveEvent(QMouseEvent *e)
             }
         }
     }
+#endif
 }
 
 void ChartWidget::mouseReleaseEvent(QMouseEvent *e)
 {
     QWidget::mouseReleaseEvent(e);
+#ifdef CANSWAP
     if (mIsDragingChart != nullptr) {
         mIsDragingChart->SetDraging(false);
         mIsDragingChart->SetFloating(true);
         mIsDragingChart = nullptr;
     }
+#endif
 }
 
 void ChartWidget::paintEvent(QPaintEvent *e)
 {
     QPainter p(this);
-    p.fillRect(rect(), palette().brush(QPalette::Background));
+    p.fillRect(rect(), palette().brush(QPalette::Base));
     QFont font = p.font();
     //font.setFamily(PaintParameters::FONT_NAME);
     p.setFont(font);
@@ -262,7 +265,9 @@ void ChartWidget::paintEvent(QPaintEvent *e)
     mChartHeight = 0;
     DrawChart(p, mChartHeight, mRoot);
     p.drawRect(rect().adjusted(0, 0, 0, -1));
+#ifdef CANSWAP
     DrawDragingChart(p, mIsDragingChart);
+#endif
     DrawHighLight(p);
     p.end();
     UpdateScrollbar();
@@ -291,7 +296,7 @@ void ChartWidget::resizeEvent(QResizeEvent *e)
 void ChartWidget::wheelEvent(QWheelEvent *e)
 {
     QWidget::wheelEvent(e);
-    int delta = e->delta();
+    int delta = e->angleDelta().y();
     if (e->modifiers() == Qt::NoModifier) {
         if (delta < 0) {
             mScrollbar->setValue(mScrollbar->value() + 10);
@@ -301,7 +306,7 @@ void ChartWidget::wheelEvent(QWheelEvent *e)
         }
     }
     if (e->modifiers() == Qt::ControlModifier) {
-        ChartData *tmp = GetChartData(e->pos(), mRoot, 0, mContext->mControlBarWidth);
+        ChartData *tmp = GetChartData(e->position().toPoint(), mRoot, 0, mContext->mControlBarWidth);
         if (tmp == nullptr) {
             return;
         }
@@ -331,10 +336,14 @@ void ChartWidget::DrawChart(QPainter &p, int &h, ChartData *data)
     tmpRect.setHeight(data->mChartHeight);
     data->mRect = tmpRect;
     h += data->mChartHeight;
-
+#ifdef CANSWAP
     DrawFloatingChart(p, data);
-
-    if ((tmpRect.bottom() > 0 || tmpRect.top() < height()) && data->IsDraging() == false && data->IsFloating() == false) {
+#endif
+    if ((tmpRect.bottom() > 0 || tmpRect.top() < height())
+#ifdef CANSWAP
+        && data->IsDraging() == false && data->IsFloating() == false
+#endif
+        ) {
         p.fillRect(tmpRect, mContext->mColor.GetChartBackGround());
         p.drawRect(tmpRect);
         DrawData(p, data, tmpRect);
@@ -466,7 +475,7 @@ void ChartWidget::DrawHighLight(QPainter &p)
     p.drawLine(mHighLightTimeStamp->rc.topRight() + QPoint(-2, 2), mHighLightTimeStamp->rc.bottomLeft() - QPoint(-2, 2));
     p.restore();
 }
-
+#ifdef CANSWAP
 void ChartWidget::DrawDragingChart(QPainter &p, ChartData *data)
 {
     if (data == nullptr) {
@@ -498,7 +507,7 @@ void ChartWidget::DrawFloatingChart(QPainter &p, ChartData *data)
     }
     qreal ftop = data->GetFloatingYLocation();
     qreal top = data->mRect.top();
-    qreal cy = (4.0 * ftop + top) / 5.0;
+    qreal cy = (6.0 * ftop + top) / 7.0;
     if (qAbs(top - ftop) <= 2.0) {
         data->SetFloating(false);
     } else {
@@ -511,6 +520,7 @@ void ChartWidget::DrawFloatingChart(QPainter &p, ChartData *data)
     DrawControlBar(p, data, dragingRect);
     DrawExpandFlag(p, data, dragingRect);
 }
+#endif
 
 ChartData *ChartWidget::GetChartData(QPoint pos, ChartData *data, int start, int width)
 {

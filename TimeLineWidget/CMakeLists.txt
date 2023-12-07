@@ -8,7 +8,11 @@ set(CMAKE_AUTORCC ON)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
+option(CANSWAP "can swap chart" OFF)
+if (CANSWAP)
+    add_definitions(-DCANSWAP)
+endif()
+set(CMAKE_PREFIX_PATH /home/suncaiyu/Qt/6.6.1/gcc_64/lib/cmake)
 find_package(QT NAMES Qt6 Qt5 QUIET  COMPONENTS Widgets)
 if (${QT_FOUND})
 else()

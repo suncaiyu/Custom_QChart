@@ -15,6 +15,8 @@ class ChartData {
 public:
     explicit ChartData();
     virtual ~ChartData();
+    QString GetNameHash(QString name);
+#ifdef CANSWAP
     void SetDraging(bool flag, int distance = 0);
     bool IsDraging() { return mIsDraging; }
     void SetFloating(bool flag);
@@ -22,7 +24,7 @@ public:
     void SetFloatingYLocation(int fy);
     int GetFloatingYLocation() { return mFloatingY; }
     int GetDraging2TopDistance() { return mDraging2TopDistance; }
-
+#endif
     bool mIsVisible = true;
     bool mIsTitle = false;
     QRect mRect;
@@ -40,6 +42,7 @@ public:
     QVector<ShowedInfo> mShowedTimeStamp;
 
 private:
+#ifdef CANSWAP
     bool mIsDraging = false;
     bool mIsFloating = false;
     int mDraging2TopDistance = 0;
@@ -47,5 +50,6 @@ private:
     void SetChildrenDraging(bool flag, ChartData *child, int distance = 0);
     void SetChildrenFloatingYLocation(ChartData *data, int &fy);
     void SetChildrenFloating(bool flag, ChartData *data);
+#endif
 };
 #endif // !CHARTDATA_H
